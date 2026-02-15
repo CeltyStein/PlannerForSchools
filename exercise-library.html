@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantherna Exercise Library</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+  <style>
+    :root {
+      --bg: #070b12;
+      --panel: #0b1220;
+      --card: #0a1626;
+      --text: #e2f2ff;
+      --muted: #8abbd1;
+      --accent: #22d3ee;
+      --accent-2: #38bdf8;
+      --neon-border: rgba(34,211,238,0.35);
+      --neon-glow: 0 0 18px rgba(34,211,238,0.35), 0 0 44px rgba(34,211,238,0.2);
+      --neon-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 24px rgba(34,211,238,0.25);
+    }
+    * { box-sizing: border-box; }
+    html, body, #root { height: 100%; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(34,211,238,.18), transparent 40%),
+        radial-gradient(circle at 78% 6%, rgba(59,130,246,.16), transparent 36%),
+        linear-gradient(180deg, #070b12 0%, #071423 42%, #05070b 100%);
+      color: var(--text);
+      color-scheme: dark;
+      overflow: auto;
+    }
+    .glass {
+      background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(0,0,0,0.22));
+      border: 1px solid var(--neon-border);
+      box-shadow: var(--neon-shadow), 0 0 0 1px rgba(34,211,238,0.16);
+      backdrop-filter: blur(10px);
+    }
+    .exercise-card {
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      cursor: pointer;
+      border: 1px solid rgba(34,211,238,0.16);
+    }
+    .exercise-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.45), 0 0 22px rgba(34,211,238,0.35);
+      border-color: rgba(34,211,238,0.6);
+    }
+    .filter-btn {
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 0 0 1px rgba(34,211,238,0.18);
+    }
+    .filter-btn:hover,
+    .filter-btn:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 1px rgba(34,211,238,0.45), 0 0 16px rgba(34,211,238,0.35);
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px rgba(34,211,238,0.3), 0 0 18px rgba(34,211,238,0.25);
+    }
+    .difficulty-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .modal-backdrop { animation: fadeIn 0.25s ease; }
+    .modal-content { animation: slideUp 0.28s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .pill-dot {
+      width: 8px; height: 8px; border-radius: 999px; display: inline-block;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+  </style>
+</head>
+<body class="h-full">
+  <div id="root" class="h-full w-full"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useId } = React;
+
+    const defaultConfig = {
+      background_color: "radial-gradient(circle at 20% 18%, rgba(34,211,238,.18), transparent 40%), radial-gradient(circle at 78% 6%, rgba(59,130,246,.16), transparent 36%), linear-gradient(180deg, #070b12 0%, #071423 42%, #05070b 100%)",
+      surface_color: "var(--panel)",
+      text_color: "var(--text)",
+      primary_action_color: "#22d3ee",
+      secondary_action_color: "#8abbd1",
+      library_title: "Pantherna Exercise Library",
+      library_subtitle: "Master advanced calisthenics movements",
+      font_family: "Segoe UI",
+      font_size: 16
+    };
+
+    const ExerciseSVG = ({ type, color }) => {
+      const accent = color || "#22d3ee";
+      const soft = `${accent}33`;
+      const id = useId();
+      const stroke = "#0f0c14";
+      const commonBg = (
+        <defs>
+          <linearGradient id={`${id}-bg`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={soft}/>
+            <stop offset="100%" stopColor={`${accent}55`}/>
+          </linearGradient>
+          <linearGradient id={`${id}-accent`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={accent}/>
+            <stop offset="100%" stopColor={`${accent}cc`}/>
+          </linearGradient>
+        </defs>
+      );
+
+      const base = (children) => (
+        <svg viewBox="0 0 120 120" role="img" aria-hidden="true">
+          {commonBg}
+          <rect x="4" y="4" width="112" height="112" rx="18" fill={`url(#${id}-bg)`} stroke="rgba(255,255,255,0.06)" />
+          <rect x="10" y="90" width="100" height="8" rx="4" fill="rgba(255,255,255,0.04)"/>
+          {children}
+        </svg>
+      );
+
+      if (type === "handstand") {
+        return base(
+          <>
+            <rect x="55" y="24" width="10" height="56" rx="6" fill={`url(#${id}-accent)`}/>
+            <rect x="44" y="52" width="32" height="8" rx="4" fill={accent} opacity="0.8"/>
+            <rect x="48" y="66" width="24" height="8" rx="4" fill={accent} opacity="0.65"/>
+            <circle cx="60" cy="20" r="7" fill={accent} stroke={stroke} strokeWidth="2"/>
+            <path d="M46 94 L60 78 L74 94" fill={accent} opacity="0.8" stroke={stroke} strokeWidth="2" strokeLinejoin="round"/>
+          </>
+        );
+      }
+      if (type === "planche") {
+        return base(
+          <>
+            <rect x="24" y="68" width="72" height="10" rx="5" fill={`url(#${id}-accent)`}/>
+            <rect x="18" y="82" width="84" height="6" rx="3" fill="rgba(255,255,255,0.08)"/>
+            <circle cx="28" cy="64" r="9" fill={accent} stroke={stroke} strokeWidth="2"/>
+            <rect x="44" y="58" width="42" height="8" rx="4" fill={accent} opacity="0.85"/>
+            <rect x="66" y="48" width="10" height="20" rx="4" fill={accent} opacity="0.7"/>
+          </>
+        );
+      }
+      if (type === "pushup") {
+        return base(
+          <>
+            <rect x="26" y="68" width="68" height="10" rx="5" fill={`url(#${id}-accent)`}/>
+            <rect x="18" y="82" width="84" height="6" rx="3" fill="rgba(255,255,255,0.08)"/>
+            <circle cx="34" cy="64" r="8" fill={accent} stroke={stroke} strokeWidth="2"/>
+            <rect x="44" y="60" width="44" height="8" rx="4" fill={accent} opacity="0.9"/>
+            <rect x="70" y="52" width="10" height="20" rx="4" fill={accent} opacity="0.65"/>
+          </>
+        );
+      }
+      if (type === "cross") {
+        return base(
+          <>
+            <circle cx="60" cy="40" r="12" fill={accent} stroke={stroke} strokeWidth="2"/>
+            <rect x="56" y="50" width="8" height="36" rx="4" fill={accent}/>
+            <rect x="26" y="56" width="68" height="10" rx="5" fill={`url(#${id}-accent)`}/>
+            <rect x="30" y="66" width="8" height="26" rx="4" fill={accent} opacity="0.8"/>
+            <rect x="82" y="66" width="8" height="26" rx="4" fill={accent} opacity="0.8"/>
+          </>
+        );
+      }
+      return base(
+        <>
+          <rect x="34" y="44" width="52" height="16" rx="8" fill={`url(#${id}-accent)`}/>
+          <rect x="42" y="62" width="36" height="24" rx="10" fill={accent} opacity="0.8"/>
+          <circle cx="60" cy="38" r="10" fill={accent} stroke={stroke} strokeWidth="2"/>
+        </>
+      );
+    };
+
+    const baseExercises = [
+      { id: 1, name: "Upside down deadlifts", muscle: "shoulders", category: "Handstand", difficulty: "advanced", count: 19, type: "handstand", exerciseType: "calisthenics", description: "Advanced inverted deadlift movement requiring exceptional shoulder strength and control." },
+      { id: 2, name: "Handstand Press", muscle: "shoulders", category: "Handstand", difficulty: "advanced", count: 18, type: "handstand", exerciseType: "calisthenics", description: "Press into a handstand from pike position, building raw shoulder power." },
+      { id: 3, name: "Handstand hold", muscle: "shoulders", category: "Handstand", difficulty: "intermediate", count: 17, type: "handstand", exerciseType: "calisthenics", description: "Static hold developing balance and shoulder endurance." },
+      { id: 4, name: "Handstand finger press", muscle: "shoulders", category: "Handstand", difficulty: "expert", count: 15, type: "handstand", exerciseType: "calisthenics", description: "Extreme variation using only fingertips for maximum finger and forearm strength." },
+      { id: 5, name: "Handstand kick-ups", muscle: "shoulders", category: "Handstand", difficulty: "beginner", count: 15, type: "handstand", exerciseType: "calisthenics", description: "Dynamic entry into handstand position, building momentum control." },
+      { id: 6, name: "100 Handstand routine", muscle: "shoulders", category: "Handstand", difficulty: "expert", count: 14, type: "handstand", exerciseType: "calisthenics", description: "High-volume handstand training for ultimate shoulder endurance." },
+      { id: 7, name: "Maltese", muscle: "shoulders", category: "Planche", difficulty: "expert", count: 15, type: "planche", exerciseType: "calisthenics", description: "Ultra-advanced ring position with arms out to sides, requiring immense shoulder strength." },
+      { id: 8, name: "Planche", muscle: "shoulders", category: "Planche", difficulty: "advanced", count: 15, type: "planche", exerciseType: "calisthenics", description: "Horizontal body hold with only hands touching the ground." },
+      { id: 9, name: "Full Planche hold", muscle: "shoulders", category: "Planche", difficulty: "advanced", count: 11, type: "planche", exerciseType: "calisthenics", description: "Complete planche position with legs extended, the pinnacle of straight arm strength." },
+      { id: 10, name: "Full Planche pushups", muscle: "shoulders", category: "Planche", difficulty: "expert", count: 11, type: "planche", exerciseType: "calisthenics", description: "Dynamic pushups while maintaining full planche position." },
+      { id: 11, name: "Pike rotations", muscle: "shoulders", category: "Mobility", difficulty: "beginner", count: 11, type: "default", exerciseType: "calisthenics", description: "Shoulder mobility and warm-up exercise in pike position." },
+      { id: 12, name: "Iron cross", muscle: "shoulders", category: "Cross", difficulty: "expert", count: 12, type: "cross", exerciseType: "calisthenics", description: "Iconic rings hold with arms extended horizontally, demanding maximal shoulder strength." },
+      { id: 13, name: "Victorian cross", muscle: "shoulders", category: "Cross", difficulty: "expert", count: 11, type: "cross", exerciseType: "calisthenics", description: "Advanced cross variation with body inverted and arms behind." },
+      { id: 14, name: "100 pushups", muscle: "chest", category: "Pushup", difficulty: "intermediate", count: 22, type: "pushup", exerciseType: "calisthenics", description: "High-volume pushup training for chest endurance and conditioning." },
+      { id: 15, name: "90 degree pushups", muscle: "chest", category: "Pushup", difficulty: "advanced", count: 11, type: "pushup", exerciseType: "calisthenics", description: "Pushup variation with body at 90-degree angle, extreme difficulty." },
+      { id: 16, name: "Straight arm Ring flies", muscle: "chest", category: "Rings", difficulty: "advanced", count: 11, type: "cross", exerciseType: "calisthenics", description: "Ring flies with straight arms for maximum chest activation." },
+      { id: 17, name: "Tucked Super man Dips", muscle: "chest", category: "Dips", difficulty: "advanced", count: 11, type: "pushup", exerciseType: "calisthenics", description: "Advanced dip variation with tucked position for increased difficulty." },
+      { id: 18, name: "Pushup holds (Isometric)", muscle: "chest", category: "Pushup", difficulty: "intermediate", count: 11, type: "pushup", exerciseType: "calisthenics", description: "Static holds at various pushup positions for time under tension." },
+      { id: 19, name: "One arm pull ups", muscle: "back", category: "Pull-ups", difficulty: "expert", count: 24, type: "default", exerciseType: "calisthenics", description: "Elite pulling movement with single arm, maximum back and bicep strength." },
+      { id: 20, name: "Front lever", muscle: "back", category: "Lever", difficulty: "advanced", count: 19, type: "planche", exerciseType: "calisthenics", description: "Horizontal body hold hanging from bar, tremendous core and back strength." },
+      { id: 21, name: "Pullups", muscle: "back", category: "Pull-ups", difficulty: "beginner", count: 18, type: "default", exerciseType: "calisthenics", description: "Fundamental vertical pulling exercise for back development." },
+      { id: 22, name: "Back lever", muscle: "back", category: "Lever", difficulty: "advanced", count: 16, type: "planche", exerciseType: "calisthenics", description: "Inverted horizontal hold under the bar, advanced back strength." },
+      { id: 23, name: "Skin the cat", muscle: "back", category: "Mobility", difficulty: "intermediate", count: 16, type: "default", exerciseType: "calisthenics", description: "Dynamic shoulder and back mobility movement through full rotation." },
+      { id: 24, name: "100 pull-ups", muscle: "back", category: "Pull-ups", difficulty: "advanced", count: 15, type: "default", exerciseType: "calisthenics", description: "High-volume pull-up training for back endurance." },
+      { id: 25, name: "Archer pull ups", muscle: "back", category: "Pull-ups", difficulty: "advanced", count: 15, type: "default", exerciseType: "calisthenics", description: "Single-arm pull-up progression with extended arm assistance." },
+      { id: 26, name: "Weighted Pull ups", muscle: "back", category: "Pull-ups", difficulty: "intermediate", count: 15, type: "default", exerciseType: "calisthenics", description: "Pull-ups with added weight for strength development." },
+      { id: 27, name: "One hand dead hang", muscle: "back", category: "Grip", difficulty: "advanced", count: 14, type: "default", exerciseType: "calisthenics", description: "Single-arm hanging hold for extreme grip and back strength." },
+      { id: 28, name: "Rows", muscle: "back", category: "Strength", difficulty: "beginner", count: 14, type: "default", exerciseType: "calisthenics", description: "Horizontal pulling movement for back thickness." },
+      { id: 29, name: "Human flag", muscle: "back", category: "Advanced", difficulty: "expert", count: 12, type: "planche", exerciseType: "calisthenics", description: "Sideways body hold on vertical pole, full-body strength feat." },
+      { id: 30, name: "L sit pull-ups", muscle: "back", category: "Pull-ups", difficulty: "advanced", count: 12, type: "default", exerciseType: "calisthenics", description: "Pull-ups while maintaining L-sit position, core and back integration." },
+      { id: 31, name: "One arm chin ups", muscle: "back", category: "Pull-ups", difficulty: "expert", count: 12, type: "default", exerciseType: "calisthenics", description: "Single-arm chin-up with underhand grip." },
+      { id: 32, name: "One hand chin ups", muscle: "back", category: "Pull-ups", difficulty: "expert", count: 12, type: "default", exerciseType: "calisthenics", description: "Elite single-arm chin-up variation." },
+      { id: 33, name: "Wide grip pullups", muscle: "back", category: "Pull-ups", difficulty: "intermediate", count: 12, type: "default", exerciseType: "calisthenics", description: "Pull-ups with wide grip for lat emphasis." },
+      { id: 34, name: "Explosive pull ups", muscle: "back", category: "Pull-ups", difficulty: "intermediate", count: 11, type: "default", exerciseType: "calisthenics", description: "Dynamic pull-ups with explosive upward movement." },
+      { id: 35, name: "Muscle ups", muscle: "back", category: "Advanced", difficulty: "advanced", count: 11, type: "default", exerciseType: "calisthenics", description: "Combined pull-up and dip transition movement." },
+      { id: 36, name: "Type writer pull ups", muscle: "back", category: "Pull-ups", difficulty: "advanced", count: 11, type: "default", exerciseType: "calisthenics", description: "Pull-up variation moving side to side at the top." },
+      { id: 37, name: "Close grip pullups", muscle: "back", category: "Pull-ups", difficulty: "intermediate", count: 10, type: "default", exerciseType: "calisthenics", description: "Pull-ups with narrow grip for bicep and inner back focus." },
+      { id: 38, name: "Lat pulldowns", muscle: "back", category: "Strength", difficulty: "beginner", count: 9, type: "default", exerciseType: "weightlifting", description: "Machine-based vertical pulling for lat development." },
+      { id: 39, name: "Deadlift", muscle: "back", category: "Strength", difficulty: "intermediate", count: 8, type: "default", exerciseType: "weightlifting", description: "Fundamental hip hinge movement for total back strength." },
+      { id: 40, name: "Dragon flags", muscle: "core", category: "Advanced", difficulty: "expert", count: 17, type: "default", exerciseType: "calisthenics", description: "Extreme core exercise hanging body from shoulders." },
+      { id: 41, name: "L sit hold", muscle: "core", category: "Static", difficulty: "intermediate", count: 15, type: "default", exerciseType: "calisthenics", description: "Seated position with legs extended parallel to ground." },
+      { id: 42, name: "V sits", muscle: "core", category: "Static", difficulty: "advanced", count: 15, type: "default", exerciseType: "calisthenics", description: "Advanced V-shaped hold balancing on tailbone." },
+      { id: 43, name: "Ab wheel rollouts", muscle: "core", category: "Dynamic", difficulty: "intermediate", count: 14, type: "default", exerciseType: "calisthenics", description: "Rolling forward on ab wheel for core extension strength." },
+      { id: 44, name: "Bicycle crunches", muscle: "core", category: "Dynamic", difficulty: "beginner", count: 14, type: "default", exerciseType: "calisthenics", description: "Alternating elbow-to-knee crunches for obliques." },
+      { id: 45, name: "Hanging Toes to bar", muscle: "core", category: "Dynamic", difficulty: "intermediate", count: 14, type: "default", exerciseType: "calisthenics", description: "Hanging ab exercise bringing toes up to bar." },
+      { id: 46, name: "Windshield wipers", muscle: "core", category: "Dynamic", difficulty: "advanced", count: 14, type: "default", exerciseType: "calisthenics", description: "Side-to-side leg movement while hanging." },
+      { id: 47, name: "Hollow body hold", muscle: "core", category: "Static", difficulty: "beginner", count: 13, type: "default", exerciseType: "calisthenics", description: "Fundamental gymnastic core position on back." },
+      { id: 48, name: "Lying leg raises", muscle: "core", category: "Dynamic", difficulty: "beginner", count: 13, type: "default", exerciseType: "calisthenics", description: "Leg raises from lying position for lower abs." },
+      { id: 49, name: "Side planche raises", muscle: "core", category: "Advanced", difficulty: "expert", count: 13, type: "planche", exerciseType: "calisthenics", description: "Extremely advanced side planche variation." },
+      { id: 50, name: "Reverse crunches", muscle: "core", category: "Dynamic", difficulty: "beginner", count: 12, type: "default", exerciseType: "calisthenics", description: "Crunches bringing knees toward chest." },
+      { id: 51, name: "Russian twists", muscle: "core", category: "Dynamic", difficulty: "beginner", count: 12, type: "default", exerciseType: "calisthenics", description: "Rotational core exercise for obliques." },
+      { id: 52, name: "Turkish Get Ups", muscle: "core", category: "Dynamic", difficulty: "intermediate", count: 12, type: "default", exerciseType: "weightlifting", description: "Complex movement from lying to standing with weight." },
+      { id: 53, name: "Hanging knee raises", muscle: "core", category: "Dynamic", difficulty: "beginner", count: 11, type: "default", exerciseType: "calisthenics", description: "Bringing knees up while hanging for lower abs." },
+      { id: 54, name: "Sit ups", muscle: "core", category: "Dynamic", difficulty: "beginner", count: 11, type: "default", exerciseType: "calisthenics", description: "Classic core exercise with full trunk flexion." },
+      { id: 55, name: "Weighted sit ups", muscle: "core", category: "Dynamic", difficulty: "intermediate", count: 11, type: "default", exerciseType: "weightlifting", description: "Sit-ups with added weight for progression." },
+      { id: 56, name: "Plank", muscle: "core", category: "Static", difficulty: "beginner", count: 10, type: "default", exerciseType: "calisthenics", description: "Fundamental core hold in push-up position." },
+      { id: 57, name: "Cable crunches", muscle: "core", category: "Dynamic", difficulty: "beginner", count: 9, type: "default", exerciseType: "weightlifting", description: "Machine-based crunches with resistance." },
+      { id: 58, name: "Incline sit ups", muscle: "core", category: "Dynamic", difficulty: "intermediate", count: 8, type: "default", exerciseType: "calisthenics", description: "Sit-ups on incline bench for increased difficulty." },
+      { id: 59, name: "Squat", muscle: "legs", category: "Strength", difficulty: "beginner", count: 22, type: "default", exerciseType: "calisthenics", description: "Fundamental lower body exercise for leg development." },
+      { id: 60, name: "Pistol squats", muscle: "legs", category: "Advanced", difficulty: "advanced", count: 18, type: "default", exerciseType: "calisthenics", description: "Single-leg squat requiring balance and strength." },
+      { id: 61, name: "Bulgarian split squats", muscle: "legs", category: "Strength", difficulty: "intermediate", count: 16, type: "default", exerciseType: "calisthenics", description: "Single-leg squat with rear foot elevated." },
+      { id: 62, name: "100 squats routine", muscle: "legs", category: "Endurance", difficulty: "intermediate", count: 15, type: "default", exerciseType: "calisthenics", description: "High-volume squat training for leg endurance." },
+      { id: 63, name: "Jumping Squats", muscle: "legs", category: "Plyometric", difficulty: "intermediate", count: 15, type: "default", exerciseType: "calisthenics", description: "Explosive squat variation with jump." },
+      { id: 64, name: "Lunges", muscle: "legs", category: "Strength", difficulty: "beginner", count: 15, type: "default", exerciseType: "calisthenics", description: "Alternating leg exercise for quads and glutes." },
+      { id: 65, name: "Wall sits", muscle: "legs", category: "Static", difficulty: "beginner", count: 15, type: "default", exerciseType: "calisthenics", description: "Isometric hold in squat position against wall." },
+      { id: 66, name: "Calf raises", muscle: "legs", category: "Isolation", difficulty: "beginner", count: 14, type: "default", exerciseType: "calisthenics", description: "Standing or seated calf muscle exercise." },
+      { id: 67, name: "Dragon squats", muscle: "legs", category: "Advanced", difficulty: "expert", count: 14, type: "default", exerciseType: "calisthenics", description: "Extreme squat variation with one leg extended." },
+      { id: 68, name: "Leg press", muscle: "legs", category: "Strength", difficulty: "beginner", count: 14, type: "default", exerciseType: "weightlifting", description: "Machine-based leg pressing exercise." },
+      { id: 69, name: "Shrimp squats", muscle: "legs", category: "Advanced", difficulty: "advanced", count: 14, type: "default", exerciseType: "calisthenics", description: "Single-leg squat holding rear foot." },
+      { id: 70, name: "Box jumps", muscle: "legs", category: "Plyometric", difficulty: "intermediate", count: 13, type: "default", exerciseType: "calisthenics", description: "Explosive jump onto elevated platform." },
+      { id: 71, name: "Hamstring curls", muscle: "legs", category: "Isolation", difficulty: "beginner", count: 13, type: "default", exerciseType: "weightlifting", description: "Machine or bodyweight hamstring exercise." },
+      { id: 72, name: "Step ups", muscle: "legs", category: "Strength", difficulty: "beginner", count: 13, type: "default", exerciseType: "calisthenics", description: "Stepping up onto platform with alternating legs." },
+      { id: 73, name: "Weighted squats", muscle: "legs", category: "Strength", difficulty: "intermediate", count: 13, type: "default", exerciseType: "weightlifting", description: "Squats with barbell or additional weight." },
+      { id: 74, name: "Leg extensions", muscle: "legs", category: "Isolation", difficulty: "beginner", count: 11, type: "default", exerciseType: "weightlifting", description: "Machine-based quad isolation exercise." },
+      { id: 75, name: "Nordic curls", muscle: "legs", category: "Advanced", difficulty: "advanced", count: 11, type: "default", exerciseType: "calisthenics", description: "Kneeling hamstring curl using body weight." },
+      { id: 76, name: "Single leg deadlifts", muscle: "legs", category: "Strength", difficulty: "intermediate", count: 11, type: "default", exerciseType: "calisthenics", description: "Balance and hamstring exercise on one leg." },
+      { id: 77, name: "Sissy squats", muscle: "legs", category: "Advanced", difficulty: "advanced", count: 10, type: "default", exerciseType: "calisthenics", description: "Quad-focused squat leaning back on knees." },
+      { id: 78, name: "Glute bridges", muscle: "legs", category: "Strength", difficulty: "beginner", count: 9, type: "default", exerciseType: "calisthenics", description: "Hip thrust exercise for glute development." }
+    ];
+
+    const morningWarmup = [
+      { name: "Warmup dynamic stretches w/ little pumps", exerciseType: "warmup", category: "Dynamic warmup", muscle: "mobility" },
+      { name: "12 Deep breathes in and out", exerciseType: "warmup", category: "Dynamic warmup", muscle: "full body", count: 12 },
+      { name: "Side to side", exerciseType: "warmup", category: "Dynamic warmup", muscle: "mobility" },
+      { name: "Spine relfextion", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core" },
+      { name: "Trunk circles", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core" },
+      { name: "Trunk twists", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core" },
+      { name: "Horizontal arm pulls", exerciseType: "warmup", category: "Dynamic warmup", muscle: "shoulders" },
+      { name: "Vertical arm pulls", exerciseType: "warmup", category: "Dynamic warmup", muscle: "shoulders" },
+      { name: "Circles and bends", exerciseType: "warmup", category: "Dynamic warmup", muscle: "mobility" },
+      { name: "Flat bends", exerciseType: "warmup", category: "Dynamic warmup", muscle: "mobility" },
+      { name: "Twisting bends", exerciseType: "warmup", category: "Dynamic warmup", muscle: "mobility" },
+      { name: "Hip circles", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs" },
+      { name: "Tucked Back lean 2 times", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core", count: 2 },
+      { name: "Toe touches hold for 30 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 30 },
+      { name: "Toe Reaches hold for 30 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 30 },
+      { name: "Shoulder mobility stretch | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "shoulders", count: 25 },
+      { name: "Finger stretches | 25 Seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "forearms", count: 25 },
+      { name: "Neck stretches | 25 Seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back", count: 25 },
+      { name: "Neck roll | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "back", count: 25 },
+      { name: "Shoulder Pumps | 25 Seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "shoulders", count: 25 },
+      { name: "Over the head Shoulder pumps | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "shoulders", count: 25 },
+      { name: "Elbow Twists | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "shoulders", count: 25 },
+      { name: "Side to side back twist | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core", count: 25 },
+      { name: "Lower Hips Stretch backs | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 25 },
+      { name: "Lower hips Stretch forwards | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 25 },
+      { name: "Thigh Side leans | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 25 },
+      { name: "Hip Flexor circle stretch | 25 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 25 },
+      { name: "Hamstring stretch | 25 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 25 },
+      { name: "Quad stretch | 25 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 25 },
+      { name: "Hamstring Lunge stretch | 25 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 25 },
+      { name: "Inner quad raise stretches | 25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 25 },
+      { name: "Knee Mobility stretches |25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 25 },
+      { name: "Ankle Mobility stretches |25 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 25 },
+      { name: "Calves stretches | 25 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 25 },
+      { name: "Butterflies | 25 seconds", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs", count: 25 },
+      { name: "Rolling Wrist exercise | 12 reps 3 sets", exerciseType: "warmup", category: "Dynamic warmup", muscle: "forearms", count: 12 },
+      { name: "Knee bent Hip flexor stretch", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Depress spine hold", exerciseType: "yoga", category: "Yoga / stretch", muscle: "core" },
+      { name: "Massage leg", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs" },
+      { name: "Foot twist stretch", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs" },
+      { name: "Foot band pushdowns", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs" },
+      { name: "Slide lying Adductor raises", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs" },
+      { name: "Shoulder And pelvis dropdowns", exerciseType: "warmup", category: "Dynamic warmup", muscle: "shoulders" },
+      { name: "Side reach overs", exerciseType: "warmup", category: "Dynamic warmup", muscle: "full body" },
+      { name: "Squat sit", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs" },
+      { name: "Step ups", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs" },
+      { name: "Glute stretch", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "ddreswa toe Wall sit | 45 seconds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 45 },
+      { name: "Cossack squat | 12 reps", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 12 },
+      { name: "Tumbling Warmup", exerciseType: "warmup", category: "Dynamic warmup", muscle: "full body" },
+      { name: "Inchworms - Planche", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core", icon: "planche", count: 5 },
+      { name: "90 Degree walk", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core", icon: "planche", count: 5 },
+      { name: "Straight Jump All-directions", exerciseType: "warmup", category: "Dynamic warmup", muscle: "legs", count: 5 },
+      { name: "Kip up", exerciseType: "warmup", category: "Dynamic warmup", muscle: "full body", count: 5 },
+      { name: "Mountain Pose", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Wall Hollow holds", exerciseType: "warmup", category: "Dynamic warmup", muscle: "core", count: 5 },
+      { name: "Bridge Arch hold", exerciseType: "yoga", category: "Yoga / stretch", muscle: "core" },
+      { name: "Kickovers", exerciseType: "warmup", category: "Dynamic warmup", muscle: "full body", count: 5 },
+      { name: "Day(s) tumbling", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Toe Touches", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Splits", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Middle splits", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Oversplits", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Back Tuck", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Front tuck", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Straddle jump", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Chest Hand", exerciseType: "yoga", category: "Yoga / stretch", muscle: "core" },
+      { name: "Headstand", exerciseType: "yoga", category: "Yoga / stretch", muscle: "core" },
+      { name: "Elbow stand", exerciseType: "yoga", category: "Yoga / stretch", muscle: "core" },
+      { name: "Straddle Press handstand", exerciseType: "yoga", category: "Yoga / stretch", muscle: "shoulders" },
+      { name: "Layout", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Split leap", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Back Walkover", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Front Handspring", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Back Hand Spring", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Round offs", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Fly spring", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Backbend kickover", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Aerial", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Front Limber", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Back limber", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Back Chest roll", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Back extension roll", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Tick tock", exerciseType: "yoga", category: "Yoga / stretch", muscle: "core" },
+      { name: "Illusion", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Single Stag Jump", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Chin Needle", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Floor Needle", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Spider cartwheel", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Tilt jump", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Tilt drop", exerciseType: "yoga", category: "Yoga / stretch", muscle: "legs" },
+      { name: "Bow Pose", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Teardrop backbend", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Bridge", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Chair Back Bend", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Valdez", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Tinsica", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Helicopter", exerciseType: "yoga", category: "Yoga / stretch", muscle: "full body" },
+      { name: "Scorpion", exerciseType: "yoga", category: "Yoga / stretch", muscle: "back" },
+      { name: "Neck around the worlds stretch", exerciseType: "warmup", category: "Blood warmup", muscle: "back" },
+      { name: "Hip twists", exerciseType: "warmup", category: "Blood warmup", muscle: "core" },
+      { name: "Elbow twists", exerciseType: "warmup", category: "Blood warmup", muscle: "shoulders" },
+      { name: "Hip hyperextension and flexion", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Hip Flexor stretch", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Shoulder rolls", exerciseType: "warmup", category: "Blood warmup", muscle: "shoulders" },
+      { name: "Hip circles", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Elbow circles", exerciseType: "warmup", category: "Blood warmup", muscle: "shoulders" },
+      { name: "Rear delt stretch", exerciseType: "warmup", category: "Blood warmup", muscle: "shoulders" },
+      { name: "Knee swings", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Knee throwups", exerciseType: "warmup", category: "Blood warmup", muscle: "core" },
+      { name: "Butt kicks", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Squat jumps", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Jumping jacks", exerciseType: "warmup", category: "Blood warmup", muscle: "full body" },
+      { name: "L sit hold", exerciseType: "warmup", category: "Blood warmup", muscle: "core" },
+      { name: "Handstand hold", exerciseType: "warmup", category: "Blood warmup", muscle: "shoulders" },
+      { name: "Shoulder adduction with resistance band", exerciseType: "warmup", category: "Blood warmup", muscle: "shoulders" },
+      { name: "Wrist rolls", exerciseType: "warmup", category: "Blood warmup", muscle: "forearms" },
+      { name: "PNF Wrist leans", exerciseType: "warmup", category: "Blood warmup", muscle: "forearms" },
+      { name: "Wrist flexor pushups", exerciseType: "warmup", category: "Blood warmup", muscle: "forearms" },
+      { name: "Wrist bends", exerciseType: "warmup", category: "Blood warmup", muscle: "forearms" },
+      { name: "Forearm flexor stretch", exerciseType: "warmup", category: "Blood warmup", muscle: "forearms" },
+      { name: "Forearm Extensor stretch", exerciseType: "warmup", category: "Blood warmup", muscle: "forearms" },
+      { name: "Wrist turnouts stretch", exerciseType: "warmup", category: "Blood warmup", muscle: "forearms" },
+      { name: "Wall sit", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Cossack squats", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Alturnating side planks", exerciseType: "warmup", category: "Blood warmup", muscle: "core" },
+      { name: "Oblique side leans", exerciseType: "warmup", category: "Blood warmup", muscle: "core" },
+      { name: "Butterfly stretch", exerciseType: "warmup", category: "Blood warmup", muscle: "legs" },
+      { name: "Neck around the worlds", exerciseType: "warmup", category: "Blood warmup", muscle: "back" }
+    ];
+
+    const exerciseData = [
+      ...baseExercises,
+      ...morningWarmup.map((item, idx) => ({
+        id: baseExercises.length + idx + 1,
+        name: item.name,
+        muscle: item.muscle || "mobility",
+        category: item.category || "Dynamic warmup",
+        difficulty: item.difficulty || "beginner",
+        count: item.count || 1,
+        type: item.icon || "default",
+        exerciseType: item.exerciseType || "warmup",
+        description: item.description || "Morning routine movement."
+      }))
+    ];
+
+    const ExerciseCard = ({ exercise, onClick, config }) => {
+      const difficultyColors = {
+        beginner: '#4ade80',
+        intermediate: '#fbbf24',
+        advanced: '#f87171',
+        expert: '#c084fc'
+      };
+      const pill = difficultyColors[exercise.difficulty] || config.secondary_action_color;
+
+      return (
+        <div
+          className="exercise-card glass"
+          onClick={onClick}
+          style={{
+            borderRadius: '18px',
+            padding: '22px',
+            background: config.surface_color
+          }}
+        >
+          <div style={{
+            width: '90px',
+            height: '90px',
+            margin: '0 auto 16px',
+            padding: '10px',
+            borderRadius: '18px',
+            background: `${config.primary_action_color}15`,
+            border: `1px solid ${config.primary_action_color}33`,
+            display: 'grid',
+            placeItems: 'center'
+          }}>
+            <ExerciseSVG type={exercise.type} color={config.primary_action_color} />
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{
+              fontSize: `${config.font_size * 1.05}px`,
+              fontWeight: 700,
+              color: config.text_color,
+              marginBottom: '8px',
+              fontFamily: `${config.font_family}, -apple-system, sans-serif`
+            }}>
+              {exercise.name}
+            </h3>
+
+            <div style={{ marginBottom: '12px' }}>
+              <span className="difficulty-badge glass" style={{
+                background: `${pill}25`,
+                color: pill,
+                border: `1px solid ${pill}55`
+              }}>
+                <span className="pill-dot" style={{ background: `linear-gradient(135deg, ${pill}, ${config.primary_action_color})` }}></span>
+                {exercise.difficulty}
+              </span>
+            </div>
+
+            <p style={{
+              fontSize: `${config.font_size * 0.9}px`,
+              color: config.secondary_action_color,
+              fontFamily: `${config.font_family}, -apple-system, sans-serif`,
+              margin: 0
+            }}>
+              {exercise.category} • {exercise.count}×
+            </p>
+          </div>
+        </div>
+      );
+    };
+
+    const ExerciseModal = ({ exercise, onClose, config }) => {
+      if (!exercise) return null;
+      const difficultyColors = {
+        beginner: '#4ade80',
+        intermediate: '#fbbf24',
+        advanced: '#f87171',
+        expert: '#c084fc'
+      };
+      const pill = difficultyColors[exercise.difficulty] || config.secondary_action_color;
+
+      return (
+        <div
+          className="modal-backdrop"
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+        >
+          <div
+            className="modal-content glass"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: config.surface_color,
+              borderRadius: '24px',
+              padding: '36px',
+              maxWidth: '720px',
+              width: '100%',
+              maxHeight: '90%',
+              overflow: 'auto',
+              position: 'relative'
+            }}
+          >
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255,255,255,0.05)',
+                border: `1px solid ${config.surface_color}`,
+                color: config.text_color,
+                fontSize: '20px',
+                cursor: 'pointer',
+                width: '38px',
+                height: '38px',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: '10px'
+              }}
+            >
+              ×
+            </button>
+
+            <div style={{
+              width: '120px',
+              height: '120px',
+              margin: '0 auto 20px',
+              padding: '12px',
+              borderRadius: '22px',
+              background: `${config.primary_action_color}15`,
+              border: `1px solid ${config.primary_action_color}33`,
+              display: 'grid',
+              placeItems: 'center'
+            }}>
+              <ExerciseSVG type={exercise.type} color={config.primary_action_color} />
+            </div>
+
+            <h2 style={{
+              fontSize: `${config.font_size * 1.8}px`,
+              fontWeight: 800,
+              color: config.text_color,
+              textAlign: 'center',
+              marginBottom: '12px',
+              letterSpacing: '-0.02em',
+              fontFamily: `${config.font_family}, -apple-system, sans-serif`
+            }}>
+              {exercise.name}
+            </h2>
+
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginBottom: '18px'
+            }}>
+              <span className="difficulty-badge glass" style={{ background: `${pill}25`, color: pill, border: `1px solid ${pill}55` }}>{exercise.difficulty}</span>
+              <span className="difficulty-badge glass" style={{ background: `${config.secondary_action_color}25`, color: config.secondary_action_color, border: `1px solid ${config.secondary_action_color}55` }}>{exercise.category}</span>
+              <span className="difficulty-badge glass" style={{ background: `${config.primary_action_color}25`, color: config.primary_action_color, border: `1px solid ${config.primary_action_color}55` }}>{exercise.muscle}</span>
+              <span className="difficulty-badge glass" style={{ background: `${config.primary_action_color}15`, color: config.text_color, border: `1px solid ${config.surface_color}` }}>{exercise.exerciseType}</span>
+            </div>
+
+            <p style={{
+              fontSize: `${config.font_size * 1.0}px`,
+              color: config.text_color,
+              lineHeight: '1.7',
+              marginBottom: '20px',
+              textAlign: 'center',
+              fontFamily: `${config.font_family}, -apple-system, sans-serif`
+            }}>
+              {exercise.description}
+            </p>
+
+            <div className="glass" style={{
+              background: `${config.primary_action_color}10`,
+              borderRadius: '14px',
+              padding: '18px',
+              textAlign: 'center',
+              border: `1px solid ${config.primary_action_color}25`
+            }}>
+              <p style={{
+                fontSize: `${config.font_size * 0.9}px`,
+                color: config.secondary_action_color,
+                marginBottom: '6px',
+                fontFamily: `${config.font_family}, -apple-system, sans-serif`
+              }}>
+                Appeared in notes
+              </p>
+              <p style={{
+                fontSize: `${config.font_size * 2}px`,
+                fontWeight: 800,
+                color: config.primary_action_color,
+                margin: 0,
+                letterSpacing: '0.01em',
+                fontFamily: `${config.font_family}, -apple-system, sans-serif`
+              }}>
+                {exercise.count}×
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [config, setConfig] = useState(defaultConfig);
+      const [selectedExercise, setSelectedExercise] = useState(null);
+      const [filterMuscle, setFilterMuscle] = useState('all');
+      const [filterDifficulty, setFilterDifficulty] = useState('all');
+      const [filterExerciseType, setFilterExerciseType] = useState('all');
+      const [searchQuery, setSearchQuery] = useState('');
+
+      useEffect(() => {
+        if (window.elementSdk) {
+          window.elementSdk.init({
+            defaultConfig,
+            onConfigChange: async (newConfig) => setConfig(newConfig),
+            mapToCapabilities: (cfg) => ({
+              recolorables: [
+                { get: () => cfg.background_color || defaultConfig.background_color, set: (v) => window.elementSdk.setConfig({ background_color: v }) },
+                { get: () => cfg.surface_color || defaultConfig.surface_color, set: (v) => window.elementSdk.setConfig({ surface_color: v }) },
+                { get: () => cfg.text_color || defaultConfig.text_color, set: (v) => window.elementSdk.setConfig({ text_color: v }) },
+                { get: () => cfg.primary_action_color || defaultConfig.primary_action_color, set: (v) => window.elementSdk.setConfig({ primary_action_color: v }) },
+                { get: () => cfg.secondary_action_color || defaultConfig.secondary_action_color, set: (v) => window.elementSdk.setConfig({ secondary_action_color: v }) }
+              ],
+              borderables: [],
+              fontEditable: { get: () => cfg.font_family || defaultConfig.font_family, set: (v) => window.elementSdk.setConfig({ font_family: v }) },
+              fontSizeable: { get: () => cfg.font_size || defaultConfig.font_size, set: (v) => window.elementSdk.setConfig({ font_size: v }) }
+            }),
+            mapToEditPanelValues: (cfg) => new Map([
+              ["library_title", cfg.library_title || defaultConfig.library_title],
+              ["library_subtitle", cfg.library_subtitle || defaultConfig.library_subtitle]
+            ])
+          });
+        }
+      }, []);
+
+      const filteredExercises = useMemo(() => {
+        return exerciseData.filter(exercise => {
+          const matchesMuscle = filterMuscle === 'all' || exercise.muscle === filterMuscle;
+          const matchesDifficulty = filterDifficulty === 'all' || exercise.difficulty === filterDifficulty;
+          const matchesExerciseType = filterExerciseType === 'all' || exercise.exerciseType === filterExerciseType;
+          const search = searchQuery.trim().toLowerCase();
+          const matchesSearch = !search || exercise.name.toLowerCase().includes(search) || exercise.category.toLowerCase().includes(search);
+          return matchesMuscle && matchesDifficulty && matchesExerciseType && matchesSearch;
+        });
+      }, [filterMuscle, filterDifficulty, filterExerciseType, searchQuery]);
+
+      const summary = useMemo(() => {
+        const perDiff = filteredExercises.reduce((acc, ex) => {
+          acc[ex.difficulty] = (acc[ex.difficulty] || 0) + 1;
+          return acc;
+        }, {});
+        return perDiff;
+      }, [filteredExercises]);
+
+      return (
+        <div style={{
+          width: '100%',
+          minHeight: '100%',
+          background: config.background_color,
+          color: config.text_color,
+          paddingBottom: '60px'
+        }}>
+          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '36px 24px' }}>
+            <header style={{ textAlign: 'center', marginBottom: '36px' }}>
+              <p style={{
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                fontSize: `${config.font_size * 0.75}px`,
+                color: config.secondary_action_color,
+                marginBottom: '10px'
+              }}>Workout hub · Pantherna</p>
+              <h1 style={{
+                fontSize: `${config.font_size * 2.5}px`,
+                fontWeight: 800,
+                marginBottom: '10px',
+                fontFamily: `${config.font_family}, -apple-system, sans-serif`,
+                background: `linear-gradient(135deg, ${config.primary_action_color}, var(--accent-2))`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.02em'
+              }}>
+                {config.library_title}
+              </h1>
+              <p style={{
+                fontSize: `${config.font_size * 1.05}px`,
+                color: config.secondary_action_color,
+                fontFamily: `${config.font_family}, -apple-system, sans-serif`,
+                margin: 0
+              }}>
+                {config.library_subtitle}
+              </p>
+            </header>
+
+            <div className="glass" style={{ padding: '18px', borderRadius: '18px', marginBottom: '20px' }}>
+              <input
+                type="text"
+                placeholder="Search exercises..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  background: config.surface_color,
+                  border: `2px solid ${config.surface_color}`,
+                  borderRadius: '12px',
+                  color: config.text_color,
+                  fontSize: `${config.font_size}px`,
+                  fontFamily: `${config.font_family}, -apple-system, sans-serif`
+                }}
+              />
+            </div>
+
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))',
+              gap: '12px',
+              alignItems: 'stretch',
+              marginBottom: '18px'
+            }}>
+              <div className="glass" style={{ padding: '16px', borderRadius: '14px' }}>
+                <p style={{ margin: '0 0 8px', color: config.secondary_action_color, fontSize: `${config.font_size * 0.8}px` }}>Muscle focus</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {['all', 'shoulders', 'chest', 'back', 'core', 'legs', 'mobility', 'full body', 'forearms'].map(muscle => (
+                    <button
+                      key={muscle}
+                      onClick={() => setFilterMuscle(muscle)}
+                      className="filter-btn"
+                      style={{
+                        padding: '10px 14px',
+                        background: filterMuscle === muscle ? config.primary_action_color : config.surface_color,
+                        color: filterMuscle === muscle ? '#0f0c14' : config.text_color,
+                        border: 'none',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: `${config.font_size * 0.9}px`,
+                        fontFamily: `${config.font_family}, -apple-system, sans-serif`,
+                        textTransform: 'capitalize'
+                      }}
+                    >
+                      {muscle}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass" style={{ padding: '16px', borderRadius: '14px' }}>
+                <p style={{ margin: '0 0 8px', color: config.secondary_action_color, fontSize: `${config.font_size * 0.8}px` }}>Difficulty</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {['all', 'beginner', 'intermediate', 'advanced', 'expert'].map(difficulty => (
+                    <button
+                      key={difficulty}
+                      onClick={() => setFilterDifficulty(difficulty)}
+                      className="filter-btn"
+                      style={{
+                        padding: '10px 14px',
+                        background: filterDifficulty === difficulty ? config.primary_action_color : config.surface_color,
+                        color: filterDifficulty === difficulty ? '#0f0c14' : config.text_color,
+                        border: 'none',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: `${config.font_size * 0.9}px`,
+                        fontFamily: `${config.font_family}, -apple-system, sans-serif`,
+                        textTransform: 'capitalize'
+                      }}
+                    >
+                      {difficulty}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass" style={{ padding: '16px', borderRadius: '14px' }}>
+                <p style={{ margin: '0 0 8px', color: config.secondary_action_color, fontSize: `${config.font_size * 0.8}px` }}>Exercise type</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {['all', 'calisthenics', 'weightlifting', 'warmup', 'yoga'].map(kind => (
+                    <button
+                      key={kind}
+                      onClick={() => setFilterExerciseType(kind)}
+                      className="filter-btn"
+                      style={{
+                        padding: '10px 14px',
+                        background: filterExerciseType === kind ? config.primary_action_color : config.surface_color,
+                        color: filterExerciseType === kind ? '#0f0c14' : config.text_color,
+                        border: 'none',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: `${config.font_size * 0.9}px`,
+                        fontFamily: `${config.font_family}, -apple-system, sans-serif`,
+                        textTransform: 'capitalize'
+                      }}
+                    >
+                      {kind}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '12px',
+              flexWrap: 'wrap',
+              marginBottom: '14px'
+            }}>
+              <p style={{
+                margin: 0,
+                fontSize: `${config.font_size * 0.9}px`,
+                color: config.secondary_action_color,
+                fontFamily: `${config.font_family}, -apple-system, sans-serif`
+              }}>
+                Showing {filteredExercises.length} exercise{filteredExercises.length !== 1 ? 's' : ''}
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {['beginner','intermediate','advanced','expert'].map(level => (
+                  <span key={level} className="difficulty-badge glass" style={{
+                    background: summary[level] ? `${config.primary_action_color}25` : 'rgba(255,255,255,0.05)',
+                    color: summary[level] ? config.text_color : config.secondary_action_color,
+                    border: summary[level] ? `1px solid ${config.primary_action_color}55` : '1px solid rgba(255,255,255,0.06)'
+                  }}>
+                    {level}: {summary[level] || 0}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: '18px'
+            }}>
+              {filteredExercises.map(exercise => (
+                <ExerciseCard
+                  key={exercise.id}
+                  exercise={exercise}
+                  onClick={() => setSelectedExercise(exercise)}
+                  config={config}
+                />
+              ))}
+            </div>
+
+            {filteredExercises.length === 0 && (
+              <div className="glass" style={{
+                textAlign: 'center',
+                padding: '60px 20px',
+                color: config.secondary_action_color,
+                borderRadius: '14px',
+                marginTop: '20px'
+              }}>
+                <p style={{
+                  fontSize: `${config.font_size * 1.1}px`,
+                  fontFamily: `${config.font_family}, -apple-system, sans-serif`,
+                  margin: 0
+                }}>
+                  No exercises found. Try adjusting your filters.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {selectedExercise && (
+            <ExerciseModal
+              exercise={selectedExercise}
+              onClose={() => setSelectedExercise(null)}
+              config={config}
+            />
+          )}
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

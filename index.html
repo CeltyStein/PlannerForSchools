@@ -1,0 +1,1388 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="planner-icon.svg">
+<title>Planner (Save + Edit Mode + Custom Images)</title>
+<link rel="stylesheet" href="index.css?v=20260203a">
+
+</head>
+<body class="dark-theme dark-contrast">
+<aside class="floating-rail" aria-label="Quick dock">
+  <button type="button" class="rail-toggle" id="rail-toggle" aria-expanded="true" aria-controls="rail-menu" aria-haspopup="true" aria-label="Open quick settings menu">
+    <span class="rail-toggle-icon" aria-hidden="true"></span>
+    <span class="sr-only">Open quick menu</span>
+  </button>
+  <div class="rail-menu" id="rail-menu" role="menu" tabindex="-1" aria-hidden="false">
+    <div class="rail-title">Quick menu</div>
+    <button type="button" class="rail-item" data-target="tab-planner" role="menuitem" aria-label="Planner">
+      <span class="rail-icon" aria-hidden="true">&#x1F4C5;</span>
+      <span class="rail-text">Planner</span>
+    </button>
+    <button type="button" class="rail-item" data-target="tab-pomodoro" role="menuitem" aria-label="Pomodoro timer">
+      <span class="rail-icon" aria-hidden="true">&#x1F345;</span>
+      <span class="rail-text">Pomodoro</span>
+    </button>
+    <button type="button" class="rail-item" data-target="tab-habits" role="menuitem" aria-label="Habits tracker">
+      <span class="rail-icon" aria-hidden="true">&#x2705;</span>
+      <span class="rail-text">Habits</span>
+    </button>
+    <button type="button" class="rail-item" data-target="tab-notes" role="menuitem" aria-label="Notes">
+      <span class="rail-icon" aria-hidden="true">&#x1F4DD;</span>
+      <span class="rail-text">Notes</span>
+    </button>
+    <button type="button" class="rail-item" data-target="tab-workout" role="menuitem" aria-label="Weekly workout">
+      <span class="rail-icon" aria-hidden="true">&#x1F3CB;&#xFE0F;</span>
+      <span class="rail-text">Weekly workout</span>
+    </button>
+  </div>
+  <button type="button" class="rail-toggle rail-timer-toggle" id="countdown-rail-toggle" aria-pressed="true" aria-controls="countdown-popout-panel" aria-label="Toggle quick timer">
+    <span class="rail-timer-icon" aria-hidden="true">&#x23F0;</span>
+    <span class="sr-only">Toggle quick timer</span>
+  </button>
+  <button type="button" class="rail-toggle rail-quicktools-toggle is-on" id="countdown-enable-toggle" aria-pressed="true" aria-controls="countdown-popout" aria-label="Disable quick tools">
+    <span class="rail-timer-icon" aria-hidden="true">&#x23FB;</span>
+    <span class="sr-only">Toggle quick tools</span>
+  </button>
+  <div class="level-widget dock-level" id="rpg-hud">
+    <button class="profile-button" id="profile-button" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="profile-popover" aria-label="Open profile preview">
+      <span class="profile-avatar" aria-hidden="true">&#x1F464;</span>
+      <span class="sr-only">Open profile preview</span>
+    </button>
+    <div class="profile-popover" id="profile-popover" role="dialog" aria-label="Profile preview">
+      <div class="profile-popover-head">
+        <button class="profile-avatar-badge" id="profile-gear" type="button" aria-label="Open settings" data-default="&#x1F9D1;&#x200D;&#x1F4BB;" data-gear="&#x2699;&#xFE0F;"></button>
+        <div>
+          <div class="profile-popover-title">Guest profile</div>
+          <div class="profile-popover-sub">Log in to sync your streaks + classes.</div>
+        </div>
+      </div>
+      <div class="profile-popover-body">
+        <div class="profile-stat">
+          <span>Streak</span>
+          <strong id="profile-streak-preview">0 days</strong>
+        </div>
+        <div class="profile-stat">
+          <span>Level</span>
+          <strong id="profile-level-preview">Level 1</strong>
+        </div>
+      </div>
+      <div class="profile-popover-actions">
+        <a class="btn" href="login-outline.html">Log in</a>
+      </div>
+    </div>
+    <button class="level-button" id="level-button" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="level-popover">
+      <svg class="level-ring" viewBox="0 0 44 44" aria-hidden="true">
+        <circle class="level-ring-track" id="level-ring-track" cx="22" cy="22" r="17"></circle>
+        <circle class="level-ring-progress" id="level-ring-progress" cx="22" cy="22" r="17"></circle>
+      </svg>
+      <span class="level-number" id="level-number">6</span>
+      <span class="sr-only">Open level details</span>
+    </button>
+    <div class="level-popover" id="level-popover" role="dialog" aria-label="Level details">
+      <div class="level-popover-head">
+        <div class="rpg-title" id="level-title">Stack Explorer</div>
+        <div class="rpg-level" id="level-label">Level 6</div>
+      </div>
+      <div class="rpg-progress compact">
+        <div class="rpg-bar"><span id="level-bar-fill" style="width:0%;"></span></div>
+        <div class="rpg-xp" id="level-xp">396 XP / 500 XP</div>
+      </div>
+      <div class="level-streak-meta">
+        <div class="level-streak-icon">&#x1F525;</div>
+        <div class="level-streak-copy">
+          <div class="level-streak-label">Daily streak</div>
+          <div class="level-streak-count"><span id="level-streak-count">0</span> days &middot; Best <span id="level-streak-best">0</span></div>
+          <div class="level-streak-note" id="level-streak-note">Back tomorrow for +15 XP.</div>
+        </div>
+      </div>
+      <div class="level-wellness" id="level-wellness"></div>
+    </div>
+  </div>
+</aside>
+<div class="wrap">
+<img id="phone-icon" class="decor" src="phone.png" alt="Decorative phone icon"/> 
+<img id="pglasses-icon" class="decor" src="pglasses.png" alt="Decorative sunglasses"/> 
+
+
+
+
+  <header>
+    <h1>Your Productivity Hub</h1>
+    <p>Planner • Pomodoro • Habits • Assignments • Notes</p>
+    <div class="controls">
+      <label class="toggle pill-action">
+        <input type="checkbox" id="chk-edit">
+        <span>&#x270F;&#xFE0F; Editing mode</span>
+      </label>
+      <div class="inline-views">
+        <button class="btn pill-action" id="focus-today">&#x1F525; Focus Today</button>
+        <button class="btn pill-action" id="toggle-days" aria-pressed="false">&#x2195;&#xFE0F; Collapse all</button>
+        <button class="btn pill-action" id="toggle-day-drag" aria-pressed="false">Drag days</button>
+        <div class="view-toggle">
+          <button class="btn tab pill-action" id="planner-class-view" aria-pressed="true" onclick="window.setPlannerClassView && setPlannerClassView()">Class view</button>
+        </div>
+      </div>
+      <label class="btn file-label" for="planner-import-file" style="display:none;">&#x1F4E5; Import JSON</label>
+      <input type="file" id="planner-import-file" accept="application/json" class="file-input-hidden">
+      <span id="storage-note" class="note"></span>
+    </div>
+    <div class="planner-exports">
+      <button class="btn" id="planner-export-json" style="display:none;">&#x1F4E4; Export JSON</button>
+      <button class="btn" id="planner-export-csv" style="display:none;">&#x1F4E4; Export CSV</button>
+      <button class="btn" id="planner-export-ics">&#x1F4E4; Export Weekly .ics</button>
+      <button class="btn" id="planner-resync-calendar">&#x21BB; Resync Weekly to Calendar</button>
+      <button class="btn calendar-mini-toggle" id="calendar-mini-toggle" type="button" aria-expanded="true" aria-controls="calendar-mini" aria-label="Toggle mini calendar">
+        <span class="calendar-mini-toggle-icon">&#x1F4C5;</span>
+        <span class="calendar-mini-toggle-label">Mini calendar</span>
+      </button>
+      <label class="btn file-label" for="planner-import-csv" style="display:none;">&#x1F4E5; Import CSV</label>
+      <input type="file" id="planner-import-csv" accept=".csv" class="file-input-hidden">
+    </div>
+        <div class="view-controls">
+          <div class="mood-energy">
+            <label> Mood:
+              <select id="mood-select" aria-label="Select mood">
+                <option value="neutral">&#x1F642; Neutral</option>
+                <option value="tired">&#x1F634; Tired</option>
+                <option value="energized">&#x26A1; Energized</option>
+              </select>
+            </label>
+            <label> Energy:
+              <select id="energy-select" aria-label="Select energy">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+          </div>
+        </div>
+    <div id="story-mode-card" class="story-mode-card card" aria-live="polite">
+      <div class="story-mode-head">
+        <div>
+          <p class="story-chip">Story Mode</p>
+          <h3>Cyber-Forensics Narrative</h3>
+        </div>
+        <div id="story-mode-stage" class="story-mode-stage">Boot Camp Operative</div>
+      </div>
+      <p id="story-mode-text">HQ is syncing your intel. Import your .ics feed to unlock the next briefing.</p>
+      <ul id="story-mode-list" class="story-mode-list"></ul>
+      <div id="story-mode-footer" class="story-mode-footer"></div>
+    </div>
+  <div id="reflection-card" class="reflection-card card" style="display:none;">
+    <div class="reflection-head">
+      <div>
+        <p class="story-chip">Reflect & Grow</p>
+        <h3>Weekly review</h3>
+      </div>
+      <button class="btn ghost" type="button" id="reflection-new">New prompt</button>
+    </div>
+    <p id="reflection-prompt" class="reflection-prompt">This week, what felt easier than it did last week?</p>
+    <textarea id="reflection-input" placeholder="Write a few sentences about the progress you felt, not just the numbers."></textarea>
+    <div class="reflection-foot">
+      <div class="reflection-meta" id="reflection-meta"></div>
+    </div>
+    <div class="reflection-log" id="reflection-log"></div>
+  </div>
+  </header>
+
+  <main class="section">
+    <section id="panel-planner" role="tabpanel" aria-labelledby="tab-planner"></section>
+
+    <section id="panel-pomodoro" role="tabpanel" aria-labelledby="tab-pomodoro" class="hidden">
+      <div class="pomo-card">
+        <div class="pomo-header">
+          <div>
+            <h2>🔥 Deep Focus Pomodoro</h2>
+            <p class="pomo-durations" id="pomo-durations">52-min focus • 20-min short breaks • 40-min final break</p>
+          </div>
+          <div class="pomo-focus-inputs">
+            <label class="pomo-focus-input">
+              Focus (min):
+              <input id="pomo-focus-input" type="number" min="0" max="240" value="52">
+            </label>
+            <label class="pomo-focus-input">
+              Short break (min):
+              <input id="pomo-short-input" type="number" min="0" max="240" value="20">
+            </label>
+            <label class="pomo-focus-input">
+              Long break (min):
+              <input id="pomo-long-input" type="number" min="0" max="240" value="40">
+            </label>
+            <label class="pomo-focus-input" style="gap:6px;align-items:center;">
+              <input id="pomo-break-chime-toggle" type="checkbox" checked>
+              <span>Break chime</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="pomo-layout">
+          <div class="pomo-panel">
+            <div class="pomo-status">
+              <span>Mode: <strong id="pomo-mode">Focus</strong></span>
+              <span>Cycle <strong id="pomo-cycle">1</strong> / 4</span>
+            </div>
+            <div class="pomo-circle" id="pomo-circle">
+              <div class="pomo-time" id="pomo-time">52:00</div>
+            </div>
+            <div class="pomo-mode" id="pomo-mode-hint">Focus for 52 minutes.</div>
+            <div class="pomo-dots">
+              <span class="pomo-dot on" id="pomo-dot1"></span>
+              <span class="pomo-dot" id="pomo-dot2"></span>
+              <span class="pomo-dot" id="pomo-dot3"></span>
+              <span class="pomo-dot" id="pomo-dot4"></span>
+            </div>
+            <div class="pomo-mode">Completed <strong id="pomo-complete">0</strong> / 4 focus sessions</div>
+            <div class="pomo-controls-row">
+              <button class="pomo-btn primary" id="pomo-start">Start</button>
+              <button class="pomo-btn ghost" id="pomo-skip" title="Skip to next stage (E)">Skip 🔀</button>
+              <button class="pomo-btn ghost" id="pomo-sub" title="Subtract 5 minutes">−5 min</button>
+              <button class="pomo-btn danger" id="pomo-reset" title="Reset all (R)">Reset</button>
+            </div>
+
+            <div class="countdown-popout" id="countdown-popout" data-open="true">
+              <button class="countdown-popout-toggle" type="button" id="countdown-popout-toggle" aria-pressed="true">
+                <span class="countdown-popout-label">Quick timer</span>
+                <span class="countdown-popout-state" id="countdown-popout-state">On</span>
+                <span class="countdown-popout-check" id="countdown-popout-check" aria-hidden="true">✓</span>
+              </button>
+              <div class="countdown-popout-panel" id="countdown-popout-panel" role="dialog" aria-label="Quick countdown timer">
+                <div class="countdown-stack" id="countdown-stack">
+                  <div class="countdown-stack-nav" id="countdown-stack-nav">
+                    <button class="countdown-stack-btn" type="button" data-stack-dir="-1" aria-label="Previous panel">&lt;</button>
+                    <div class="countdown-stack-meta">
+                      <span class="countdown-stack-title" id="countdown-stack-title">Micro focus timer</span>
+                      <span class="countdown-stack-counter" id="countdown-stack-counter">1 / 3</span>
+                    </div>
+                    <button class="countdown-stack-btn" type="button" data-stack-dir="1" aria-label="Next panel">&gt;</button>
+                  </div>
+                  <div class="countdown-stack-panel is-active" data-stack-panel="micro">
+                    <div class="countdown-shell" id="countdown-shell">
+                      <div class="countdown-head">
+                        <div>
+                          <p class="countdown-label">Quick countdown</p>
+                          <h4 class="countdown-title">Micro focus timer</h4>
+                        </div>
+                        <div class="countdown-head-actions">
+                          <div class="countdown-chip" id="countdown-status">Ready</div>
+                          <button class="countdown-open-tab" type="button" id="countdown-open-tab">Open window</button>
+                        </div>
+                      </div>
+                      <div class="countdown-display-row">
+                        <div class="countdown-time" id="countdown-display">05:00</div>
+                        <div class="countdown-note">Use this for fast drills, stretches, or short reviews between full cycles.</div>
+                      </div>
+                      <div class="countdown-inputs">
+                        <label>Minutes
+                          <input type="number" id="countdown-min" min="0" max="240" value="5">
+                        </label>
+                        <label>Seconds
+                          <input type="number" id="countdown-sec" min="0" max="59" value="0">
+                        </label>
+                        <div class="countdown-presets">
+                          <button type="button" class="countdown-chip-btn" data-preset="180">3m</button>
+                          <button type="button" class="countdown-chip-btn" data-preset="300">5m</button>
+                          <button type="button" class="countdown-chip-btn" data-preset="600">10m</button>
+                          <button type="button" class="countdown-chip-btn" data-preset="1200">20m</button>
+                          <button type="button" class="countdown-chip-btn" data-preset="1800">30m</button>
+                          <button type="button" class="countdown-chip-btn" data-preset="2700">45m</button>
+                        </div>
+                      </div>
+                      <div class="countdown-progress" aria-hidden="true">
+                        <span id="countdown-progress"></span>
+                      </div>
+                      <div class="countdown-actions">
+                        <button class="pomo-btn primary" type="button" id="countdown-start">Start</button>
+                        <button class="pomo-btn ghost" type="button" id="countdown-add">+1 min</button>
+                        <button class="pomo-btn ghost" type="button" id="countdown-sub">-5 min</button>
+                        <button class="pomo-btn danger" type="button" id="countdown-reset">Reset</button>
+                        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;">
+                          <input type="checkbox" id="countdown-auto" checked> Auto-restart
+                        </label>
+                        <button class="pomo-btn ghost" type="button" id="countdown-buffer-toggle" aria-pressed="true" title="Add a 10s breather before auto-restart">10s buffer ✓</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="countdown-stack-panel" data-stack-panel="laundry">
+                    <div class="countdown-shell" id="laundry-shell">
+                      <div class="countdown-head">
+                        <div>
+                          <p class="countdown-label">Laundry countdown</p>
+                          <h4 class="countdown-title">Laundry timer (90:00)</h4>
+                        </div>
+                        <div class="countdown-chip" id="laundry-status">Ready</div>
+                      </div>
+                      <div class="countdown-display-row">
+                        <div class="countdown-time" id="laundry-display">90:00</div>
+                        <div class="countdown-note">Swap loads or pull clothes when this finishes.</div>
+                      </div>
+                      <div class="countdown-actions">
+                        <button class="pomo-btn primary" type="button" id="laundry-start">Start</button>
+                        <button class="pomo-btn ghost" type="button" id="laundry-add">+5 min</button>
+                        <button class="pomo-btn ghost" type="button" id="laundry-sub">-5 min</button>
+                        <button class="pomo-btn danger" type="button" id="laundry-reset">Reset</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="countdown-stack-panel" data-stack-panel="shortcuts">
+                    <div class="countdown-shell countdown-shortcuts" id="pomo-shortcuts-card">
+                      <div class="countdown-head">
+                        <div>
+                          <p class="countdown-label">Quick cheatsheet</p>
+                          <h4 class="countdown-title">Shortcuts & Tips</h4>
+                        </div>
+                      </div>
+                      <div class="pomo-shortcuts">
+                        <div>↪️ Skip stage <span class="kbd">E</span></div>
+                        <div>▶️ Start/Pause <span class="kbd">T</span></div>
+                        <div>🛑 Reset <span class="kbd">R</span></div>
+                        <div>➕ New break idea <span class="kbd">Y</span></div>
+                      </div>
+                      <p class="note">Sound is minimal (tab alert). Keep this tab active for best accuracy.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="pomo-side">
+            <div class="pomo-side-card">
+              <h3>🧠 Break ideas</h3>
+              <div class="pomo-task-suggest">
+                <span id="pomo-task"><strong>30-minute ab workout</strong> - hollow holds, bicycle crunches, planks</span>
+                <button class="pomo-btn ghost" id="pomo-shuffle">Shuffle 🔀</button>
+              </div>
+              <div class="pomo-pill">
+                <div><strong>30-minute ab workout</strong> <span>hollow holds • leg raises • bicycle crunches • planks</span></div>
+                <label class="pomo-check"><input type="checkbox" data-break="abs"> Done</label>
+              </div>
+              <div class="pomo-pill">
+                <div><strong>100 Push Plan</strong> <span>break into 4 rounds with pauses and perfect form</span></div>
+                <label class="pomo-check"><input type="checkbox" data-break="push"> Done</label>
+              </div>
+              <div class="pomo-pill">
+                <div><strong>Front split stretches</strong> <span>lunge pulses • hamstring fold • quad opener</span></div>
+                <div class="pomo-weekdays" data-break="split-week">
+                  <button type="button" class="pomo-weekday" data-day="Mon">M</button>
+                  <button type="button" class="pomo-weekday" data-day="Tue">T</button>
+                  <button type="button" class="pomo-weekday" data-day="Wed">W</button>
+                  <button type="button" class="pomo-weekday" data-day="Thu">T</button>
+                  <button type="button" class="pomo-weekday" data-day="Fri">F</button>
+                  <button type="button" class="pomo-weekday" data-day="Sat">S</button>
+                  <button type="button" class="pomo-weekday" data-day="Sun">S</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="panel-habits" role="tabpanel" aria-labelledby="tab-habits" class="hidden">
+      <div class="card habit-card">
+        <div class="flex habit-header">
+          <div>
+            <h2 class="habit-title">Habit Tracker</h2>
+            <p class="note">Tap the dots to mark days complete. Everything saves in your browser.</p>
+          </div>
+          <div class="chip" id="habits-progress">Week progress: 0%</div>
+        </div>
+        <div id="habit-streak-hub" class="habit-streak-hub" aria-live="polite"></div>
+        <div id="streak-freeze-bar" class="streak-freeze-bar">
+          <div class="freeze-left">
+            <div class="freeze-title">🧊 Streak Freeze</div>
+            <div class="freeze-note" id="freeze-note">Buy a freeze to protect one missed day.</div>
+          </div>
+          <div class="freeze-actions">
+            <div class="freeze-count" id="freeze-count">0 stocked</div>
+            <button class="btn" type="button" id="freeze-buy">🧊 Buy (50 XP)</button>
+            <button class="btn" type="button" id="freeze-use">🧊 Use on yesterday</button>
+          </div>
+        </div>
+        <div id="habits-list" class="space-y-3 habit-list"></div>
+        <div class="flex flex-wrap gap-2 habit-actions">
+          <button class="btn" id="habit-add">➕ Add habit</button>
+          <button class="btn" id="habit-reset-week">↻ Reset week</button>
+          <button class="btn" id="habit-save">💾 Save</button>
+          <button class="btn" id="habit-export">📤 Export JSON</button>
+          <button class="btn" id="habit-export-csv">📤 Export CSV</button>
+          <label class="btn file-label" for="habit-import">📥 Import JSON</label>
+          <input type="file" id="habit-import" accept="application/json" class="file-input-hidden">
+          <label class="btn file-label" for="habit-import-csv">📥 Import CSV</label>
+          <input type="file" id="habit-import-csv" accept=".csv" class="file-input-hidden">
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-notes" role="tabpanel" aria-labelledby="tab-notes" class="hidden">
+      <div class="notes-card">
+        <div class="notes-head">
+          <div>
+            <h3>Notes & ChatGPT imports</h3>
+            <p class="note">Mood journal entries and ChatGPT messages are saved here for quick review.</p>
+          </div>
+          <div class="notes-controls">
+            <button class="btn" id="notes-export">📤 Export JSON</button>
+            <label class="btn file-label" for="notes-import-file">📥 Import ChatGPT JSON</label>
+            <input type="file" id="notes-import-file" accept=".json" class="file-input-hidden">
+            <button class="btn" id="notes-clear">🗑️ Clear</button>
+          </div>
+        </div>
+        <div class="notes-importer">
+          <textarea id="notes-chatgpt-text" placeholder="Paste ChatGPT message JSON here and click Import."></textarea>
+          <button class="btn" id="notes-chatgpt-btn">Import pasted JSON</button>
+        </div>
+        <div id="notes-feed" class="notes-feed"></div>
+      </div>
+    </section>
+    <section id="panel-workout" role="tabpanel" aria-labelledby="tab-workout" class="hidden">
+      <div class="workout-tab">
+        <div class="workout-hero">
+          <p class="workout-suptitle">Calisthenics HQ</p>
+          <h3>Weekly Skill + Strength Stack</h3>
+        </div>
+
+        <div class="workout-controls">
+          <label class="workout-toggle">
+            <input type="checkbox" id="workout-edit-toggle">
+            <span>Edit workout text</span>
+          </label>
+          <button class="btn" id="workout-save">Save workout plan</button>
+          <button class="btn" id="workout-reset">Reset workout plan</button>
+          <button class="btn ghost" id="workout-library-btn">Exercise Library</button>
+          <div class="note" id="workout-storage-note"></div>
+        </div>
+
+        <div class="workout-section workout-tracker-card">
+          <div class="tracker-header">
+            <div class="tracker-icon">??</div>
+            <div>
+              <p class="tracker-eyebrow">Workout Type Tracker</p>
+              <h4>Log what you trained today</h4>
+              <p class="note">Select the muscle groups you hit, save, and watch this week light up.</p>
+            </div>
+          </div>
+          <div class="tracker-summary" id="workout-graph-summary">
+            <div class="summary-chip">
+              <div class="summary-label">Current streak</div>
+              <div class="summary-value" id="wg-streak">0 days</div>
+            </div>
+            <div class="summary-chip">
+              <div class="summary-label">This week</div>
+              <div class="summary-value" id="wg-days">0 / 7</div>
+            </div>
+            <div class="summary-chip">
+              <div class="summary-label">Weekly streak</div>
+              <div class="summary-value" id="wg-weekly-streak">0 wks</div>
+            </div>
+            <div class="summary-chip">
+              <div class="summary-label">Most trained</div>
+              <div class="summary-value" id="wg-top-type">-</div>
+            </div>
+          </div>
+          <div class="tracker-meta-row">
+            <div class="tracker-date" id="workout-day-label">Select your workouts</div>
+            <div class="tracker-badges" id="workout-badges"></div>
+          </div>
+          <div class="workout-tracker-grid">
+            <div class="tracker-left">
+              <form id="workout-graph-form" class="tracker-form">
+                <div class="workout-grid tracker-grid" id="workout-graph-grid">
+                  <button type="button" class="workout-option" data-type="chest">
+                    <span class="workout-checkbox"></span>
+                    <span class="workout-label">Chest</span>
+                  </button>
+                  <button type="button" class="workout-option" data-type="back">
+                    <span class="workout-checkbox"></span>
+                    <span class="workout-label">Back</span>
+                  </button>
+                  <button type="button" class="workout-option" data-type="abs">
+                    <span class="workout-checkbox"></span>
+                    <span class="workout-label">Abs</span>
+                  </button>
+                  <button type="button" class="workout-option" data-type="arms_shoulders">
+                    <span class="workout-checkbox"></span>
+                    <span class="workout-label">Arms &amp; Shoulders</span>
+                  </button>
+                  <button type="button" class="workout-option" data-type="legs_calfs">
+                    <span class="workout-checkbox"></span>
+                    <span class="workout-label">Legs &amp; Calfs</span>
+                  </button>
+                  <button type="button" class="workout-option" data-type="push">
+                    <span class="workout-checkbox"></span>
+                    <span class="workout-label">Push</span>
+                  </button>
+                  <button type="button" class="workout-option" data-type="pull">
+                    <span class="workout-checkbox"></span>
+                    <span class="workout-label">Pull</span>
+                  </button>
+                </div>
+                <div class="tracker-actions">
+                  <button type="submit" class="btn" id="workout-graph-save">Save Today</button>
+                  <button type="button" class="btn ghost" id="workout-graph-reset">Reset Week</button>
+                  <div class="tracker-message" id="workout-graph-message" aria-live="polite"></div>
+                </div>
+              </form>
+            </div>
+            <div class="tracker-right">
+              <div class="tracker-chart-head">
+                <div>
+                  <h5>This Week's Activity</h5>
+                  <p class="note">Dots brighten on days you logged a type.</p>
+                </div>
+                <div class="chart-legend" id="workout-graph-legend">
+                  <span class="legend-dot chest"></span><span>Chest</span>
+                  <span class="legend-dot back"></span><span>Back</span>
+                  <span class="legend-dot abs"></span><span>Abs</span>
+                  <span class="legend-dot arms_shoulders"></span><span>Arms</span>
+                  <span class="legend-dot legs_calfs"></span><span>Legs</span>
+                  <span class="legend-dot push"></span><span>Push</span>
+                  <span class="legend-dot pull"></span><span>Pull</span>
+                </div>
+              </div>
+              <div class="tracker-chart">
+                <div class="activity-grid" id="workout-activity-grid" role="img" aria-label="This week's activity"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workout-two-up">
+        <div class="workout-section workout-goals-card">
+          <div class="goals-head">
+            <div class="goals-icon">??</div>
+            <div>
+              <h4>Weekly Goals</h4>
+              <p class="note">Set targets and track progress</p>
+            </div>
+          </div>
+          <div class="goals-grid">
+            <div class="goals-left">
+              <label class="goal-field">
+                <span>Weekly Target (days)</span>
+                <input type="number" id="wg-goal-target" min="1" max="14" value="3">
+              </label>
+              <label class="goal-field">
+                <span>Personal Record Note</span>
+                <input type="text" id="wg-goal-pr" placeholder="e.g., 10 pull-ups, 200 lb squat">
+              </label>
+              <div class="goal-types" id="wg-goal-types">
+                <span class="goal-types-label">Focus Types</span>
+                <div class="goal-type-chips">
+                  <button type="button" class="goal-chip" data-goal-type="chest">Chest</button>
+                  <button type="button" class="goal-chip" data-goal-type="back">Back</button>
+                  <button type="button" class="goal-chip" data-goal-type="abs">Abs</button>
+                  <button type="button" class="goal-chip" data-goal-type="arms_shoulders">Arms &amp; Shoulders</button>
+                  <button type="button" class="goal-chip" data-goal-type="legs_calfs">Legs &amp; Calves</button>
+                  <button type="button" class="goal-chip" data-goal-type="push">Push</button>
+                  <button type="button" class="goal-chip" data-goal-type="pull">Pull</button>
+                </div>
+              </div>
+              <div class="goal-actions">
+                <button type="button" class="btn goal-primary" id="wg-goal-save">?? Save Goals</button>
+                <button type="button" class="btn ghost goal-ghost" id="wg-goal-reset">?</button>
+                <div class="goal-status" id="wg-goal-status" aria-live="polite"></div>
+              </div>
+            </div>
+            <div class="goals-right">
+              <p class="goal-progress-label">Weekly Completion</p>
+              <div class="goal-progress-value" id="wg-goal-meta">0 / 0 days</div>
+              <div class="goal-progress-bar">
+                <span id="wg-goal-bar"></span>
+              </div>
+              <div class="goal-focus-line" id="wg-goal-focus-note">Focus: None set</div>
+              <div class="goal-focus-line" id="wg-goal-pr-note">PR note: -</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workout-section workout-heat-card">
+          <div class="goals-head">
+            <div class="heat-icon">??</div>
+            <div>
+              <h4>Body Heat Map</h4>
+              <p class="note">See which muscles you've trained this week</p>
+            </div>
+          </div>
+          <div class="heat-grid">
+            <div class="heat-diagram-wrap">
+              <div class="heat-view-label">Front View</div>
+              <svg id="workout-heat-svg" class="body-diagram" viewBox="0 0 300 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+                <g class="heat-side active" data-side="front">
+                  <circle cx="150" cy="30" r="20" fill="#0f172a" stroke="#334155" stroke-width="2" />
+                  <rect x="140" y="48" width="20" height="15" fill="#0f172a" stroke="#334155" stroke-width="1" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Shoulders" data-intensity="0" cx="110" cy="80" rx="28" ry="22" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Shoulders" data-intensity="0" cx="190" cy="80" rx="28" ry="22" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Back" data-intensity="0" cx="150" cy="135" rx="45" ry="55" opacity="0.35" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Chest" data-intensity="0" cx="150" cy="105" rx="48" ry="32" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Arms" data-intensity="0" cx="80" cy="120" rx="20" ry="45" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Arms" data-intensity="0" cx="220" cy="120" rx="20" ry="45" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Wrists" data-intensity="0" cx="80" cy="190" rx="14" ry="18" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Wrists" data-intensity="0" cx="220" cy="190" rx="14" ry="18" />
+                  <rect class="muscle-region intensity-0" data-muscle="Abs" data-intensity="0" x="125" y="135" width="50" height="70" rx="10" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Glutes" data-intensity="0" cx="150" cy="220" rx="42" ry="28" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Legs" data-intensity="0" cx="130" cy="300" rx="26" ry="75" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Legs" data-intensity="0" cx="170" cy="300" rx="26" ry="75" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Calves" data-intensity="0" cx="130" cy="430" rx="20" ry="40" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Calves" data-intensity="0" cx="170" cy="430" rx="20" ry="40" />
+                </g>
+                <g class="heat-side" data-side="back">
+                  <circle cx="150" cy="30" r="20" fill="#0f172a" stroke="#334155" stroke-width="2" />
+                  <rect x="140" y="48" width="20" height="15" fill="#0f172a" stroke="#334155" stroke-width="1" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Shoulders" data-intensity="0" cx="110" cy="78" rx="30" ry="24" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Shoulders" data-intensity="0" cx="190" cy="78" rx="30" ry="24" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Back" data-intensity="0" cx="150" cy="140" rx="50" ry="60" opacity="0.35" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Arms" data-intensity="0" cx="78" cy="120" rx="22" ry="46" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Arms" data-intensity="0" cx="222" cy="120" rx="22" ry="46" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Wrists" data-intensity="0" cx="78" cy="192" rx="14" ry="18" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Wrists" data-intensity="0" cx="222" cy="192" rx="14" ry="18" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Glutes" data-intensity="0" cx="150" cy="225" rx="44" ry="30" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Legs" data-intensity="0" cx="130" cy="305" rx="27" ry="78" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Legs" data-intensity="0" cx="170" cy="305" rx="27" ry="78" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Calves" data-intensity="0" cx="130" cy="432" rx="20" ry="42" />
+                  <ellipse class="muscle-region intensity-0" data-muscle="Calves" data-intensity="0" cx="170" cy="432" rx="20" ry="42" />
+                </g>
+              </svg>
+            </div>
+            <div class="heat-meta">
+              <div class="heat-scale">
+                <p class="heat-scale-title">Heat Scale</p>
+                <div class="heat-scale-swatches">
+                  <span class="heat-swatch sw-0"></span>
+                  <span class="heat-swatch sw-1"></span>
+                  <span class="heat-swatch sw-2"></span>
+                  <span class="heat-swatch sw-3"></span>
+                  <span class="heat-swatch sw-4"></span>
+                  <span class="heat-swatch sw-5"></span>
+                  <span class="heat-swatch sw-6"></span>
+                </div>
+                <div class="heat-scale-legend"><span>Low</span><span>High</span></div>
+              </div>
+              <p class="heat-summary" id="heat-summary">No logged workouts in this week.</p>
+              <div class="heat-actions">
+                <button type="button" class="btn heat-btn ghost" id="heat-flip" aria-pressed="false" data-side="front">Flip to back</button>
+                <button type="button" class="btn heat-btn secondary" id="heat-reset">Reset Map</button>
+              </div>
+              <div class="heat-focus" id="heat-focus-note">Focus types: none logged yet.</div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="workout-section skill-board" id="skill-progress-board">
+          <div class="skill-board-head">
+            <div>
+              <p class="skill-board-suptitle">Skill Progress</p>
+              <h4 class="skill-board-title">Track your calisthenics skill journey</h4>
+            </div>
+            <div class="skill-board-actions">
+              <button type="button" class="btn ghost" id="skill-edit-toggle">Edit Progress</button>
+            </div>
+          </div>
+          <div class="skill-board-grid" id="skill-visualizer" aria-live="polite"></div>
+        </div>
+
+        <div class="workout-section training-dashboard" id="training-dashboard">
+          <div class="td-head">
+            <div>
+              <p class="td-eyebrow">Training Dashboard</p>
+              <h4>Weekly Planner + Routines</h4>
+            </div>
+            <div class="td-nav" role="tablist" aria-label="Training views">
+              <button class="td-tab active" id="td-tab-planner" data-view="planner" role="tab" aria-selected="true" aria-controls="td-planner-view">Weekly Planner</button>
+              <button class="td-tab" id="td-tab-routines" data-view="routines" role="tab" aria-selected="false" aria-controls="td-routines-view">Routines Library</button>
+              <button class="td-tab" id="td-tab-goals" data-view="goals" role="tab" aria-selected="false" aria-controls="td-goals-view">Weekly Goals</button>
+              <button class="td-tab" id="td-tab-heat" data-view="heat" role="tab" aria-selected="false" aria-controls="td-heat-view">Body Heat Map</button>
+              <button class="td-tab" id="td-tab-tracker" data-view="tracker" role="tab" aria-selected="false" aria-controls="td-tracker-view">Type Tracker</button>
+              <button class="td-tab" id="td-tab-skills" data-view="skills" role="tab" aria-selected="false" aria-controls="td-skills-view">Skill Progress</button>
+            </div>
+          </div>
+          <div class="td-views">
+            <div id="td-planner-view" class="td-view" role="tabpanel" aria-labelledby="td-tab-planner">
+              <div class="workout-section weekly-planner-card">
+                <div class="planner-head">
+                  <div class="planner-icon">??</div>
+                  <div>
+                    <h4>Weekly Planner</h4>
+                    <p class="note">Your weekly training split</p>
+                  </div>
+                  <button type="button" class="btn planner-edit" id="workout-plan-edit">?? Edit</button>
+                </div>
+                <div class="planner-grid">
+                  <div class="planner-head-row">
+                    <div class="planner-block-label spacer">Block</div>
+                    <div class="planner-day-heading">Mon</div>
+                    <div class="planner-day-heading">Tue</div>
+                    <div class="planner-day-heading">Wed</div>
+                    <div class="planner-day-heading">Thu</div>
+                    <div class="planner-day-heading">Fri</div>
+                    <div class="planner-day-heading">Sat</div>
+                    <div class="planner-day-heading highlight">Sun</div>
+                  </div>
+                  <div class="planner-row">
+                    <div class="planner-block-label morning">Morning Skill</div>
+                    <div class="planner-day" data-day-index="0"><div class="workout-editable">Skill: HS + Tuck Planche</div></div>
+                    <div class="planner-day" data-day-index="1"><div class="workout-editable">Skill: FL + BL prep</div></div>
+                    <div class="planner-day" data-day-index="2"><div class="workout-editable">Skill: MU + Planche</div></div>
+                    <div class="planner-day" data-day-index="3"><div class="workout-editable">Skill: HS + Levers</div></div>
+                    <div class="planner-day" data-day-index="4"><div class="workout-editable">Skill: MU + BL</div></div>
+                    <div class="planner-day" data-day-index="5"><div class="workout-editable">Skill: Free practice</div></div>
+                    <div class="planner-day rest" data-day-index="6"><div class="workout-editable">REST</div></div>
+                  </div>
+                  <div class="planner-row">
+                    <div class="planner-block-label strength">Strength</div>
+                    <div class="planner-day" data-day-index="0"><div class="workout-editable">Chest &amp; Back</div></div>
+                    <div class="planner-day" data-day-index="1"><div class="workout-editable">Legs / Abs / Traps</div></div>
+                    <div class="planner-day" data-day-index="2"><div class="workout-editable">Arms / Shoulders</div></div>
+                    <div class="planner-day" data-day-index="3"><div class="workout-editable">Chest &amp; Back</div></div>
+                    <div class="planner-day" data-day-index="4"><div class="workout-editable">Legs / Abs / Traps</div></div>
+                    <div class="planner-day" data-day-index="5"><div class="workout-editable">Smith Machine Heavy</div></div>
+                    <div class="planner-day rest" data-day-index="6"><div class="workout-editable">REST</div></div>
+                  </div>
+                  <div class="planner-row">
+                    <div class="planner-block-label evening">Evening</div>
+                    <div class="planner-day" data-day-index="0"><div class="workout-editable">Night stretch: splits</div></div>
+                    <div class="planner-day" data-day-index="1"><div class="workout-editable">Night stretch: pike</div></div>
+                    <div class="planner-day" data-day-index="2"><div class="workout-editable">Night stretch: bridge</div></div>
+                    <div class="planner-day" data-day-index="3"><div class="workout-editable">Night stretch: splits</div></div>
+                    <div class="planner-day" data-day-index="4"><div class="workout-editable">Night stretch: pike</div></div>
+                    <div class="planner-day" data-day-index="5"><div class="workout-editable">Light mobility</div></div>
+                    <div class="planner-day rest" data-day-index="6"><div class="workout-editable">Full recovery</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="td-routines-view" class="td-view hidden" role="tabpanel" aria-labelledby="td-tab-routines">
+              <div class="workout-section routines-card">
+                <div class="routines-head">
+                  <div class="routines-icon">??</div>
+                  <div>
+                    <h4>Routines Library</h4>
+                    <p class="note">Quick access to your workout routines</p>
+                  </div>
+                </div>
+                <div class="routines-filters">
+                  <button class="routine-chip active" type="button">All</button>
+                  <button class="routine-chip" type="button">Strength</button>
+                  <button class="routine-chip" type="button">Core</button>
+                  <button class="routine-chip" type="button">Skills</button>
+                  <button class="routine-chip" type="button">Recovery</button>
+                </div>
+                <div class="routines-grid" id="routines-grid"></div>
+              </div>
+            </div>
+            <div id="td-goals-view" class="td-view hidden" role="tabpanel" aria-labelledby="td-tab-goals"></div>
+            <div id="td-heat-view" class="td-view hidden" role="tabpanel" aria-labelledby="td-tab-heat"></div>
+            <div id="td-tracker-view" class="td-view hidden" role="tabpanel" aria-labelledby="td-tab-tracker"></div>
+            <div id="td-skills-view" class="td-view hidden" role="tabpanel" aria-labelledby="td-tab-skills"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" class="hidden settings-panel">
+      <div class="card p-4 settings-hub">
+        <div class="settings-hub-head">
+          <h3 class="tight-heading">Control Center</h3>
+          <p class="note">All setup, backups, exports, bunker mode, and alerts in one consolidated panel.</p>
+        </div>
+
+        <div class="settings-block">
+          <h4 class="tight-heading">Display & Startup</h4>
+          <p class="note">Choose your look and default landing view.</p>
+          <div class="settings-row">
+            <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span>Theme</span>
+              <select id="theme-select">
+                <option value="system">System/default</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span>Background image URL</span>
+              <input id="bg-url" type="url" placeholder="https://example.com/wallpaper.jpg" style="flex:1;min-width:200px;">
+            </label>
+            <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span>Font size</span>
+              <input id="font-size" type="number" min="12" max="22" value="16" style="width:80px;">
+            </label>
+            <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span>Default view</span>
+              <select id="default-view">
+                <option value="planner">Planner (default)</option>
+                <option value="pomodoro">Pomodoro</option>
+                <option value="habits">Habits</option>
+                <option value="notes">Notes</option>
+                <option value="workout">Weekly Workout</option>
+              </select>
+            </label>
+            <div class="glow-hue-control" role="group" aria-label="Glow hue">
+              <div class="glow-hue-label">Glow hue</div>
+              <div class="glow-hue-inputs">
+                <input type="color" id="glow-hue-picker" value="#ef4444" aria-label="Glow hue color">
+                <button class="btn ghost" type="button" id="glow-hue-reset">Reset glow</button>
+              </div>
+            </div>
+            <div class="glow-hue-control" role="group" aria-label="Pulse glow controls">
+              <div class="glow-hue-label">Pulse glow</div>
+              <div class="glow-hue-inputs" style="gap:12px;flex-wrap:wrap;">
+                <label style="display:flex;gap:8px;align-items:center;">
+                  <span>Speed</span>
+                  <input type="range" id="pulse-speed" min="2" max="12" step="0.2" value="5.2">
+                </label>
+                <label style="display:flex;gap:8px;align-items:center;">
+                  <span>Brightness</span>
+                  <input type="range" id="pulse-brightness" min="0.2" max="1" step="0.05" value="0.9">
+                </label>
+                <label style="display:flex;gap:8px;align-items:center;">
+                  <span>Strength</span>
+                  <input type="range" id="pulse-strength" min="0.2" max="1" step="0.05" value="0.55">
+                </label>
+                <button class="btn ghost" type="button" id="pulse-reset">Reset pulse</button>
+              </div>
+            </div>
+          </div>
+          <button class="btn" id="btn-save-display" type="button">Save display preferences</button>
+        </div>
+
+        <div class="settings-block">
+          <h4 class="tight-heading">Data & Backups</h4>
+          <div class="settings-grid">
+            <div class="settings-row">
+              <strong>Keep your data persistent</strong>
+              <p class="note">Ask the browser for "persistent storage" so your planner, habits, and notes are less likely to be cleared automatically.</p>
+              <button class="btn" id="btn-persist">Enable persistent storage</button>
+              <div class="note" id="persist-status"></div>
+            </div>
+            <div class="settings-row">
+              <strong>Save now</strong>
+              <p class="note">Manually save your planner data to this browser.</p>
+              <button class="btn" id="btn-save">&#x1F4BE; Save to browser</button>
+            </div>
+            <div class="settings-row">
+              <strong>Import planner data</strong>
+              <p class="note">Load a planner JSON export from your device.</p>
+              <label class="btn file-label" for="planner-import-file">&#x1F4E5; Import JSON</label>
+              <input type="file" id="planner-import-file" accept="application/json" class="file-input-hidden">
+            </div>
+            <div class="settings-row">
+              <strong>Import planner CSV</strong>
+              <p class="note">Load planner entries from a CSV file.</p>
+              <label class="btn file-label" for="planner-import-csv">&#x1F4E5; Import CSV</label>
+              <input type="file" id="planner-import-csv" accept=".csv" class="file-input-hidden">
+            </div>
+            <div class="settings-row">
+              <strong>Export planner JSON</strong>
+              <p class="note">Download your planner as JSON for backups.</p>
+              <button class="btn" id="planner-export-json">&#x1F4E4; Export JSON</button>
+            </div>
+            <div class="settings-row">
+              <strong>Export planner CSV</strong>
+              <p class="note">Download your planner as a CSV file.</p>
+              <button class="btn" id="planner-export-csv">&#x1F4E4; Export CSV</button>
+            </div>
+            <div class="settings-row">
+              <strong>Export workout tab</strong>
+              <p class="note">Open a print-ready PDF of the workout tab (uses your browser print dialog).</p>
+              <button class="btn" id="workout-pdf-btn">&#x1F4C4; Export Workout PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <h4 class="tight-heading">Push, Bunker, Reset, Sync</h4>
+          <div class="settings-grid">
+            <div class="settings-row card-notify" style="margin:0;">
+              <strong>Stay on track with push reminders</strong>
+              <p class="note">Enable browser notifications so we can nudge you about study checks and looming deadlines.</p>
+              <div class="mascot-wrap">
+                <img src="Pixel the PUP.png" alt="Pixel the PUP mascot" class="mascot-art" loading="lazy">
+                <div class="mascot-copy">
+                  <strong>Pixel the PUP mascot</strong>
+                  <p>Pixel the PUP will tag along on your push reminders as the app icon.</p>
+                </div>
+              </div>
+              <button class="btn" id="btn-notify" type="button">Enable push reminders</button>
+              <div class="note" id="notify-status"></div>
+            </div>
+            <div class="settings-row">
+              <strong>Keep screen awake during timers</strong>
+              <p class="note">Prevents sleep while Pomodoro, Micro, or Laundry timers are running.</p>
+              <label class="toggle" style="margin-top:8px;">
+                <input type="checkbox" id="wake-lock-toggle">
+                <span>Enable wake lock for timers</span>
+              </label>
+              <div class="note" id="wake-lock-status"></div>
+            </div>
+
+            <div class="settings-row">
+              <strong>Bunker Mode</strong>
+              <p class="note">Flip the safety switch to reskin the planner into a bunker console. Cosmetic only-data stays the same.</p>
+              <label class="toggle" style="margin-top:8px;">
+                <input type="checkbox" id="bunker-toggle">
+                <span>Activate Bunker Mode (apocalypse skin)</span>
+              </label>
+              <label class="toggle" style="margin-top:8px;">
+                <input type="checkbox" id="bunker-flicker-toggle" checked>
+                <span>Allow screen flicker effects</span>
+              </label>
+              <div style="margin-top:12px;">
+                <label class="toggle">
+                  <input type="checkbox" id="bunker-log-toggle" checked>
+                  <span>Daily Briefing (story strip)</span>
+                </label>
+                <label class="toggle" style="margin-top:8px;align-items:center;gap:6px;">
+                  <span>Tone</span>
+                  <select id="bunker-log-tone">
+                    <option value="heroic">Heroic</option>
+                    <option value="snarky">Snarky</option>
+                  </select>
+                </label>
+                <label class="toggle" style="margin-top:8px;">
+                  <input type="checkbox" id="stability-toggle" checked>
+                  <span>Base Stability (streak meter)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <strong>Sound effects</strong>
+              <p class="note">Enable button clicks and timer chimes.</p>
+              <label class="toggle" style="margin-top:8px;">
+                <input type="checkbox" id="sound-effects-toggle">
+                <span>Enable sound effects</span>
+              </label>
+            </div>
+
+            <div class="settings-row card-reset" style="margin:0;">
+              <strong>Reset</strong>
+              <p class="note">Clears everything and reloads the original sample schedule.</p>
+              <button id="btn-reset" class="tab reset-btn">Reset to sample week</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <h4 class="tight-heading">Sync & Multi-alerts</h4>
+          <div class="settings-grid">
+            <div class="settings-row">
+              <strong>Sync & Backups</strong>
+              <p class="note">Mock cloud sync + offline backup/export.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn" id="sync-now" type="button">Sync now</button>
+                <button class="btn" id="create-backup" type="button">Create backup</button>
+                <button class="btn" id="download-export" type="button">Download export</button>
+              </div>
+              <div class="note" id="backup-status">No backups yet.</div>
+            </div>
+            <div class="settings-row">
+              <strong>Multi & Recurring Alerts</strong>
+              <p class="note">Set multiple reminders per task and snooze behavior.</p>
+              <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span>Lead times (minutes, comma separated)</span>
+                <input id="alert-leads" type="text" placeholder="10,30,60" style="min-width:180px;">
+              </label>
+              <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span>Snooze minutes</span>
+                <input id="alert-snooze" type="number" min="1" value="10" style="width:80px;">
+                <label style="display:flex;gap:6px;align-items:center;">
+                  <input id="alert-repeat" type="checkbox">
+                  <span>Repeat until done</span>
+                </label>
+              </label>
+              <button class="btn" id="alert-save" type="button">Save alert settings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="panel-calendar" role="tabpanel" aria-labelledby="tab-calendar" class="hidden">
+      <div class="calendar-shell">
+        <aside class="calendar-sidebar">
+          <div class="calendar-mini" id="calendar-mini">
+            <div class="calendar-mini-head">
+              <button class="calendar-mini-nav" id="calendar-mini-prev" type="button" aria-label="Previous month">&lt;</button>
+              <div class="calendar-mini-title">
+                <span id="calendar-mini-month">Month</span>
+                <span id="calendar-mini-year">Year</span>
+              </div>
+              <button class="calendar-mini-nav" id="calendar-mini-next" type="button" aria-label="Next month">&gt;</button>
+            </div>
+            <div class="calendar-mini-weekdays">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="calendar-mini-days" id="calendar-mini-days"></div>
+          </div>
+        </aside>
+        <div class="calendar-main">
+          <div class="calendar-advanced card" id="calendar-advanced" data-ics-files="public/user_fT4Z5zWdm6gMptBytUojradkeNK0POGgtVi2hrrp.ics,public/language-schedule.ics">
+        <div class="calendar-adv-header">
+          <div class="calendar-adv-title">
+            <div class="calendar-adv-month" id="calendar-adv-month">Month</div>
+            <div class="calendar-adv-year" id="calendar-adv-year">Year</div>
+          </div>
+          <div class="calendar-adv-controls">
+            <div class="calendar-adv-nav">
+              <button class="btn calendar-adv-btn" id="calendar-adv-prev" type="button">Prev</button>
+              <button class="btn calendar-adv-btn" id="calendar-adv-today" type="button">Today</button>
+              <button class="btn calendar-adv-btn" id="calendar-adv-next" type="button">Next</button>
+            </div>
+            <div class="calendar-adv-actions">
+              <button class="btn calendar-adv-btn" id="calendar-adv-import-btn" type="button">Import .ics</button>
+              <button class="btn calendar-adv-btn" id="calendar-adv-export-btn" type="button">Export .ics</button>
+              <button class="btn calendar-adv-btn primary" id="calendar-adv-add-btn" type="button">Add event</button>
+              <button class="btn calendar-adv-btn" id="calendar-adv-classes-btn" type="button">All Classes</button>
+              <div class="calendar-tracker" id="belt-tracker">
+                <button class="btn calendar-adv-btn calendar-tracker-toggle" id="belt-tracker-toggle" type="button" aria-expanded="false" aria-controls="belt-tracker-panel">
+                  &#x1F94B; Belt tracker
+                </button>
+                <div class="calendar-tracker-panel" id="belt-tracker-panel" role="dialog" aria-label="Stripe/Belt Progress Tracker">
+                  <div class="belt-tracker-head">
+                    <div>
+                      <div class="belt-tracker-title">Stripe/Belt Progress</div>
+                      <div class="belt-tracker-subtitle">Goal: 100 classes in 8 months</div>
+                    </div>
+                    <button type="button" class="belt-tracker-close" id="belt-tracker-close" aria-label="Close tracker">x</button>
+                  </div>
+                  <div class="belt-tracker-count">
+                    <span class="belt-tracker-count-label">Classes attended</span>
+                    <span class="belt-tracker-count-number" id="belt-tracker-count">0</span>
+                    <span class="belt-tracker-count-total">/ 100</span>
+                  </div>
+                  <div class="belt-tracker-streak">
+                    <span class="belt-tracker-streak-label">Current streak</span>
+                    <span class="belt-tracker-streak-number" id="belt-tracker-streak">0</span>
+                    <span class="belt-tracker-streak-label">days</span>
+                  </div>
+                  <div class="belt-tracker-rest">
+                    <span class="belt-tracker-rest-label">Rest days available</span>
+                    <div class="belt-tracker-rest-dots" id="belt-tracker-rest-dots"></div>
+                    <div class="belt-tracker-rest-hint" id="belt-tracker-rest-hint"></div>
+                    <div class="belt-tracker-rest-slots" id="belt-tracker-rest-slots"></div>
+                  </div>
+                  <div class="belt-tracker-actions">
+                    <button class="btn belt-tracker-btn primary" type="button" id="belt-tracker-add">+1 Class</button>
+                    <button class="btn belt-tracker-btn rest" type="button" id="belt-tracker-rest">Rest Day</button>
+                  </div>
+                  <div class="belt-tracker-actions">
+                    <button class="btn belt-tracker-btn ghost" type="button" id="belt-tracker-sub">-1</button>
+                    <button class="btn belt-tracker-btn ghost" type="button" id="belt-tracker-reset">Reset</button>
+                  </div>
+                  <div class="belt-tracker-progress">
+                    <div class="belt-tracker-progress-bar" id="belt-tracker-progress-bar">
+                      <div class="belt-tracker-progress-fill" id="belt-tracker-progress-fill">
+                        <span class="belt-tracker-progress-text" id="belt-tracker-progress-text">0/100</span>
+                      </div>
+                      <span class="belt-tracker-progress-bg" id="belt-tracker-progress-bg">0/100</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="calendar-adv-toolbar">
+          <div class="calendar-adv-tabs" role="tablist" aria-label="Calendar views">
+            <button class="calendar-adv-tab active" type="button" data-view="month" aria-selected="true">Month</button>
+            <button class="calendar-adv-tab" type="button" data-view="week" aria-selected="false">Week</button>
+            <button class="calendar-adv-tab" type="button" data-view="agenda" aria-selected="false">Agenda</button>
+          </div>
+          <div class="calendar-adv-tools">
+            <label class="calendar-adv-search">
+              <span class="sr-only">Search events</span>
+              <input id="calendar-adv-search" type="search" placeholder="Search events...">
+            </label>
+            <div class="calendar-adv-filter-wrap">
+              <button class="btn calendar-adv-filter" id="calendar-adv-filter-btn" type="button">Filters</button>
+              <div class="calendar-adv-filter-panel hidden" id="calendar-adv-filter-panel" role="dialog" aria-label="Filters">
+                <div class="calendar-adv-filter-section">
+                  <div class="calendar-adv-filter-title">
+                    <span>Filter by color</span>
+                    <button class="calendar-adv-filter-clear" id="calendar-adv-filter-clear-colors" type="button">Clear</button>
+                  </div>
+                  <label class="calendar-adv-filter-option">
+                    <input type="checkbox" value="indigo">
+                    <span class="calendar-adv-filter-dot dot-indigo"></span>
+                    Indigo
+                  </label>
+                  <label class="calendar-adv-filter-option">
+                    <input type="checkbox" value="coral">
+                    <span class="calendar-adv-filter-dot dot-coral"></span>
+                    Coral
+                  </label>
+                  <label class="calendar-adv-filter-option">
+                    <input type="checkbox" value="emerald">
+                    <span class="calendar-adv-filter-dot dot-emerald"></span>
+                    Emerald
+                  </label>
+                  <label class="calendar-adv-filter-option">
+                    <input type="checkbox" value="violet">
+                    <span class="calendar-adv-filter-dot dot-violet"></span>
+                    Violet
+                  </label>
+                  <label class="calendar-adv-filter-option">
+                    <input type="checkbox" value="amber">
+                    <span class="calendar-adv-filter-dot dot-amber"></span>
+                    Amber
+                  </label>
+                </div>
+                <div class="calendar-adv-filter-section">
+                  <div class="calendar-adv-filter-title">
+                    <span>Time period</span>
+                  </div>
+                  <label class="calendar-adv-filter-option">
+                    <input type="radio" name="calendar-adv-time" value="all" checked>
+                    All events
+                  </label>
+                  <label class="calendar-adv-filter-option">
+                    <input type="radio" name="calendar-adv-time" value="upcoming">
+                    Upcoming
+                  </label>
+                  <label class="calendar-adv-filter-option">
+                    <input type="radio" name="calendar-adv-time" value="past">
+                    Past
+                  </label>
+                </div>
+                <button class="calendar-adv-filter-clear-all" id="calendar-adv-filter-clear-all" type="button">Clear all filters</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="calendar-adv-grid">
+          <div class="calendar-adv-weekdays" id="calendar-adv-weekdays"></div>
+          <div class="calendar-adv-days" id="calendar-adv-days"></div>
+        </div>
+        <div class="calendar-adv-week-view hidden" id="calendar-adv-week-view"></div>
+        <div class="calendar-adv-agenda-view hidden" id="calendar-adv-agenda-view"></div>
+        <div class="calendar-adv-status" id="calendar-adv-status">Auto-loading .ics feeds...</div>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="calendar-adv-import" accept=".ics,text/calendar" class="file-input-hidden">
+      <div class="calendar-adv-overlay" id="calendar-adv-overlay" aria-hidden="true"></div>
+      <div class="calendar-adv-panel" id="calendar-adv-panel" role="dialog" aria-label="Day details">
+        <div class="calendar-adv-panel-head">
+          <div>
+            <div class="calendar-adv-panel-title" id="calendar-adv-panel-title">Day</div>
+            <div class="calendar-adv-panel-sub" id="calendar-adv-panel-sub">Date</div>
+          </div>
+          <button class="calendar-adv-panel-close" id="calendar-adv-panel-close" type="button">Close</button>
+        </div>
+        <div class="calendar-adv-panel-body">
+          <div class="calendar-adv-all-day" id="calendar-adv-all-day"></div>
+          <div class="calendar-adv-timeblocks" id="calendar-adv-timeblocks"></div>
+        </div>
+        <div class="calendar-adv-panel-footer">
+          <button class="btn calendar-adv-btn primary" id="calendar-adv-panel-add" type="button">Add event</button>
+        </div>
+      </div>
+      <div class="calendar-adv-modal" id="calendar-adv-modal" role="dialog" aria-label="Create event">
+        <div class="calendar-adv-modal-card">
+          <div class="calendar-adv-modal-head">
+            <div class="calendar-adv-modal-title">New event</div>
+            <button class="calendar-adv-modal-close" id="calendar-adv-modal-close" type="button">x</button>
+          </div>
+          <form class="calendar-adv-modal-body" id="calendar-adv-form">
+            <label class="calendar-adv-field">
+              <span>Title</span>
+              <input type="text" id="calendar-adv-title" required>
+            </label>
+            <div class="calendar-adv-field-row">
+              <label class="calendar-adv-field">
+                <span>Date</span>
+                <input type="date" id="calendar-adv-date" required>
+              </label>
+              <label class="calendar-adv-field">
+                <span>Time</span>
+                <input type="time" id="calendar-adv-time">
+              </label>
+            </div>
+            <div class="calendar-adv-field-row">
+              <label class="calendar-adv-field">
+                <span>Repeat</span>
+                <select id="calendar-adv-repeat">
+                  <option value="none">Does not repeat</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </label>
+              <label class="calendar-adv-field">
+                <span>Repeat until</span>
+                <input type="date" id="calendar-adv-repeat-until">
+              </label>
+            </div>
+            <label class="calendar-adv-field">
+              <span>Description</span>
+              <textarea id="calendar-adv-desc" rows="2"></textarea>
+            </label>
+            <div class="calendar-adv-field">
+              <span>Color</span>
+              <div class="calendar-adv-colors" id="calendar-adv-colors">
+                <button type="button" class="calendar-adv-color color-indigo" data-color="indigo"></button>
+                <button type="button" class="calendar-adv-color color-coral" data-color="coral"></button>
+                <button type="button" class="calendar-adv-color color-emerald" data-color="emerald"></button>
+                <button type="button" class="calendar-adv-color color-violet" data-color="violet"></button>
+                <button type="button" class="calendar-adv-color color-amber" data-color="amber"></button>
+              </div>
+            </div>
+            <div class="calendar-adv-field">
+              <span>Reminders</span>
+              <div class="calendar-adv-reminders">
+                <label><input type="checkbox" value="15"> 15 minutes before</label>
+                <label><input type="checkbox" value="60"> 1 hour before</label>
+                <label><input type="checkbox" value="120"> 2 hours before</label>
+                <label><input type="checkbox" value="1440"> 1 day before</label>
+              </div>
+            </div>
+            <div class="calendar-adv-modal-actions">
+              <button class="btn calendar-adv-btn" id="calendar-adv-cancel" type="button">Cancel</button>
+              <button class="btn calendar-adv-btn primary" type="submit">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="calendar-adv-reminder" id="calendar-adv-reminder" role="status" aria-live="polite"></div>
+    </section>
+    <section id="panel-danger" role="tabpanel" aria-labelledby="tab-danger" class="hidden">
+      <div class="danger-view">
+        <div id="daily-briefing" class="daily-briefing hidden">
+          <div class="briefing-text"></div>
+          <button class="btn briefing-view" type="button" id="briefing-view-log">View log</button>
+        </div>
+        <div id="stability-strip" class="stability-strip hidden"></div>
+        <div id="briefing-log" class="briefing-log hidden"></div>
+        <div id="danger-zone" class="danger-zone"></div>
+        <div class="quest-view" id="quest-pane">
+          <div class="daily-briefing" id="quest-briefing">
+            <div class="briefing-text" id="quest-briefing-text">Track missions, earn XP, and see your backlog threat level.</div>
+            <button class="btn briefing-view" type="button" id="quest-refresh">Refresh brief</button>
+          </div>
+          <div class="danger-zone" id="quest-alert">
+            <div class="quest-alert-title">To-Do Task Watch</div>
+            <div class="danger-bar"><span id="quest-progress" style="width:0%;"></span></div>
+            <div class="quest-alert-meta">
+              <span id="quest-threat" class="quest-chip quest-chip-green">Threat: Low</span>
+              <span id="quest-active-count" class="quest-chip">Active: 0</span>
+              <span id="quest-completed-count" class="quest-chip">Completed: 0</span>
+            </div>
+          </div>
+          <div class="quest-card" id="quest-card">
+            <div class="quest-header">
+              <div>
+                <div class="smart-chip">To-Do Task</div>
+                <h3 style="margin:4px 0 0;">Quest Log</h3>
+                <p class="note" style="margin:4px 0 0;">Mimics Danger View-treat tasks like missions and clear them for XP.</p>
+              </div>
+              <div class="quest-xp" id="quest-xp">0 XP</div>
+            </div>
+            <form class="quest-form" id="quest-form">
+              <input id="quest-input" class="quest-input" type="text" placeholder="What quest awaits?" required>
+              <button class="quest-add" id="quest-add" type="submit">Add Quest</button>
+            </form>
+            <div id="quest-empty" class="note quest-empty">No quests yet. Add your first task above.</div>
+            <div class="quest-columns" id="quest-columns">
+              <div class="quest-column">
+                <div class="quest-column-title">Active Quests</div>
+                <div id="quest-active"></div>
+              </div>
+              <div class="quest-column">
+                <div class="quest-column-title">Completed Quests</div>
+                <div id="quest-completed"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="ghost-zone"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="chatbot-widget" id="chatbot-widget">
+  <div class="chatbot-nudge" id="chatbot-nudge" role="status" aria-live="polite"></div>
+  <button class="chatbot-toggle btn" id="chatbot-toggle">🤖 AI Coach</button>
+  <div class="chatbot-panel hidden" id="chatbot-panel">
+    <div class="chatbot-header">
+      <h4>AI Training Buddy</h4>
+      <p>Ask about workouts, habits, or motivation tips.</p>
+    </div>
+    <div class="chatbot-messages" id="chatbot-messages"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" type="button" id="chatbot-suggest">Daily suggestion</button>
+      <button class="btn" type="button" id="chatbot-ideas">What to ask?</button>
+    </div>
+    <form class="chatbot-form" id="chatbot-form">
+      <input type="text" id="chatbot-input" placeholder="Ask me anything…" autocomplete="off">
+      <button class="btn" type="submit">Send</button>
+    </form>
+  </div>
+</div>
+
+<div id="confetti-wrapper" aria-hidden="true"></div>
+<div id="celebration-overlay" class="celebration hidden" aria-live="polite">
+  <div class="celebration-card">
+    <div class="celebration-icon">🎉</div>
+    <h3 id="celebration-title">Streak Extended!</h3>
+    <p id="celebration-text">Keep this pace and HQ will promote you fast.</p>
+    <button class="btn celebration-btn" id="celebration-close" type="button">Keep grinding</button>
+    <div class="celebration-orbs">
+      <span class="celebration-orb orb-a"></span>
+      <span class="celebration-orb orb-b"></span>
+      <span class="celebration-orb orb-c"></span>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite">Saved</div>
+<div id="duck-overlay" class="duck-overlay" aria-live="polite" style="display:none;">
+  <div class="duck-face">🦆</div>
+  <div class="duck-text" id="duck-text">Duck mode ready.</div>
+</div>
+
+<script src="ICS-IMPORT.js"></script>
+<script src="exercise-library-data.js"></script>
+<script src="Index.js?v=20260203a"></script>
+<script src="Index2.js"></script>
+<script src="Index3.js"></script>
+<!-- Firebase analytics disabled in file:// context -->
+<script src="Index5.js"></script>
+<script src="Index6.js"></script>
+<script src="index7.js?v=20260203a"></script>
+<script src="index8.js"></script>
+<script src="index9.js"></script>
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

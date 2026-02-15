@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Planner Engagement Hub</title>
+  <link rel="stylesheet" href="Index.css">
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:linear-gradient(180deg,var(--bg1,#e0bdfd),var(--bg2,#fbcfe8));color:var(--ink,#0f172a);}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px;}
+    header h1{margin:0 0 8px;}
+    .view-controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+    .btn{background:#ede9fe;color:#6b21a8;border:1px solid #ddd;padding:8px 12px;border-radius:10px;cursor:pointer;}
+    .section-label{font-weight:700;margin-top:16px;}
+    .card-shell{padding:12px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;box-shadow:0 8px 18px rgba(0,0,0,.06);margin-top:10px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Engagement Playground</h1>
+      <p>Daily intel, mini-lesson, confessional, gremlin, boss fights, tracks, story, and ambient cues.</p>
+      <div class="view-controls">
+        <button class="btn" id="focus-today">Focus Today</button>
+        <div id="rpg-hud" class="rpg-hud"></div>
+        <div class="mood-energy">
+          <label> Mood:
+            <select id="mood-select">
+              <option value="neutral">😐 Neutral</option>
+              <option value="tired">😵‍💫 Tired</option>
+              <option value="energized">🔥 Energized</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <div id="daily-intel-card" class="daily-intel-card card-shell"></div>
+    <div id="mini-session" class="mini-session card-shell"></div>
+    <div id="crime-card" class="crime-card card-shell"></div>
+    <div id="gremlin-card" class="gremlin-card card-shell"></div>
+    <div id="danger-zone" class="danger-zone"></div>
+    <div id="boss-board" class="card-shell"></div>
+    <div id="docx-card" class="card-shell">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div>
+          <div class="smart-chip">Docx organizer</div>
+          <strong>Store & label essays (browser only)</strong>
+        </div>
+        <label class="btn" for="docx-input">Add .docx</label>
+        <input id="docx-input" type="file" accept=".docx" style="display:none;">
+      </div>
+      <p class="note">Files stay in this browser (localStorage). Keep a backup elsewhere for safety.</p>
+      <div id="docx-list"></div>
+    </div>
+
+    <div id="story-mode-card" class="story-mode-card card-shell" aria-live="polite">
+      <div class="story-mode-head">
+        <div>
+          <p class="story-chip">Story Mode</p>
+          <h3>Cyber-Forensics Narrative</h3>
+        </div>
+        <div id="story-mode-stage" class="story-mode-stage">Boot Camp Operative</div>
+      </div>
+      <p id="story-mode-text">Bring in your .ics feed to unlock the next briefing.</p>
+      <ul id="story-mode-list" class="story-mode-list"></ul>
+      <div id="story-mode-footer" class="story-mode-footer"></div>
+    </div>
+
+    <div id="integration-card" class="integration-card card-shell">
+      <div class="integration-head">
+        <div>
+          <p class="story-chip">Contextual Cues</p>
+          <h3>Make the planner ambient</h3>
+        </div>
+        <button class="btn ghost" type="button" id="integration-nudge">Smart suggestion</button>
+      </div>
+      <div class="integration-list">
+        <label class="integration-toggle">
+          <div>
+            <strong>New-tab reminder</strong>
+            <small>Pin the mini extension or set your browser start page to show your top tasks.</small>
+          </div>
+          <input type="checkbox" data-integration="newTab">
+        </label>
+        <label class="integration-toggle">
+          <div>
+            <strong>Calendar auto-sync</strong>
+            <small>Keep the .ics import/export loop running so deadlines appear on every device.</small>
+          </div>
+          <input type="checkbox" data-integration="calendar">
+        </label>
+        <label class="integration-toggle">
+          <div>
+            <strong>Voice assistant shortcut</strong>
+            <small>Say “Start focus mission” to jump into Pomodoro.</small>
+          </div>
+          <input type="checkbox" data-integration="voice">
+        </label>
+        <label class="integration-toggle">
+          <div>
+            <strong>Email summary</strong>
+            <small>Get a morning brief + weekly recap in your inbox automatically.</small>
+          </div>
+          <input type="checkbox" data-integration="email">
+        </label>
+        <label class="integration-toggle">
+          <div>
+            <strong>Home-screen widget</strong>
+            <small>Pin habit progress or quotes for a glanceable cue.</small>
+          </div>
+          <input type="checkbox" data-integration="widget">
+        </label>
+      </div>
+      <p class="integration-note" id="integration-nudge-text">Enable a cue above to anchor the planner to your daily habits.</p>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Saved</div>
+  <div id="celebration-overlay" class="celebration hidden" aria-live="polite">
+    <div class="celebration-card">
+      <div class="celebration-icon">🔥</div>
+      <h3 id="celebration-title">Streak Extended!</h3>
+      <p id="celebration-text">Keep this pace and HQ will promote you fast.</p>
+      <button class="btn celebration-btn" id="celebration-close" type="button">Keep grinding</button>
+      <div class="celebration-orbs">
+        <span class="celebration-orb orb-a"></span>
+        <span class="celebration-orb orb-b"></span>
+        <span class="celebration-orb orb-c"></span>
+      </div>
+    </div>
+  </div>
+  <div id="duck-overlay" class="duck-overlay" aria-live="polite" style="display:none;">
+     <div class="duck-face">🦆</div>
+     <div class="duck-text" id="duck-text">Duck mode ready.</div>
+  </div>
+
+  <script src="Index2.js"></script>
+</body>
+</html>

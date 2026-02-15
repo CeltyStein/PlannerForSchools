@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Micro Focus Timer</title>
+    <link rel="stylesheet" href="Index.css">
+    <style>
+      body.micro-timer-page{
+        margin:0;
+        min-height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+        background:
+          radial-gradient(circle at 20% 18%, rgba(var(--accent-rgb),.18), transparent 40%),
+          radial-gradient(circle at 78% 6%, rgba(var(--accent-2-rgb),.16), transparent 36%),
+          linear-gradient(180deg, #070b12 0%, #071423 42%, #05070b 100%);
+        color:var(--ink);
+        color-scheme:dark;
+      }
+      .micro-timer-wrap{
+        width:min(720px, 96vw);
+      }
+      .micro-timer-header{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:12px;
+        padding:12px 14px;
+        border-radius:16px;
+        border:1px solid var(--neon-border, rgba(34,211,238,.35));
+        background:linear-gradient(135deg, rgba(7,13,22,.9), rgba(9,20,34,.88));
+        box-shadow:var(--neon-card-shadow, 0 16px 32px rgba(0,0,0,.45));
+      }
+      .micro-timer-title{
+        font-size:22px;
+        font-weight:700;
+        color:#e2f2ff;
+      }
+      .micro-timer-sub{
+        font-size:13px;
+        color:var(--muted);
+      }
+      .micro-timer-actions .btn{
+        background:linear-gradient(135deg, rgba(var(--accent-rgb),.18), rgba(var(--accent-2-rgb),.18));
+        color:#e2f2ff;
+        border-color:var(--neon-border, rgba(34,211,238,.35));
+        box-shadow:0 10px 20px rgba(0,0,0,.35),0 0 16px rgba(var(--accent-rgb),.25);
+      }
+      .micro-timer-actions .btn:hover{
+        background:linear-gradient(135deg, rgba(var(--accent-rgb),.3), rgba(var(--accent-2-rgb),.3));
+      }
+      .countdown-shell{
+        margin-top:0;
+      }
+    </style>
+    <script>
+      (()=> {
+        const GLOW_HUE_KEY = "planner_glow_hue";
+        const DEFAULT_GLOW_HUE = "#22d3ee";
+        const normalizeHex = (value)=>{
+          if(typeof value !== "string") return "";
+          const trimmed = value.trim();
+          if(!trimmed) return "";
+          const hex = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+          if(/^#([0-9a-fA-F]{3}){1,2}$/.test(hex)) return hex.toLowerCase();
+          return "";
+        };
+        const hexToRgb = (hex)=>{
+          const clean = normalizeHex(hex);
+          if(!clean) return null;
+          const num = parseInt(clean.slice(1), 16);
+          return {
+            r: (num >> 16) & 255,
+            g: (num >> 8) & 255,
+            b: num & 255
+          };
+        };
+        const rgbToHex = ({ r, g, b })=>{
+          const toHex = (val)=> Math.max(0, Math.min(255, val)).toString(16).padStart(2, "0");
+          return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        };
+        const mixColors = (baseHex, mixHex, weight = 0.2)=>{
+          const base = hexToRgb(baseHex);
+          const mix = hexToRgb(mixHex);
+          if(!base || !mix) return normalizeHex(baseHex) || DEFAULT_GLOW_HUE;
+          const w = Math.max(0, Math.min(1, weight));
+          const blend = {
+            r: Math.round(base.r * (1 - w) + mix.r * w),
+            g: Math.round(base.g * (1 - w) + mix.g * w),
+            b: Math.round(base.b * (1 - w) + mix.b * w)
+          };
+          return rgbToHex(blend);
+        };
+        const applyGlowHue = (hex)=>{
+          const base = normalizeHex(hex) || DEFAULT_GLOW_HUE;
+          const accent2 = mixColors(base, "#ffffff", 0.2);
+          const baseRgb = hexToRgb(base);
+          const accent2Rgb = hexToRgb(accent2);
+          const root = document.documentElement;
+          root.style.setProperty("--accent", base);
+          root.style.setProperty("--accent-2", accent2);
+          if(baseRgb){
+            root.style.setProperty("--accent-rgb", `${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}`);
+          }
+          if(accent2Rgb){
+            root.style.setProperty("--accent-2-rgb", `${accent2Rgb.r}, ${accent2Rgb.g}, ${accent2Rgb.b}`);
+          }
+        };
+        const loadStored = ()=>{
+          try{ return localStorage.getItem(GLOW_HUE_KEY) || ""; }catch(e){ return ""; }
+        };
+        applyGlowHue(loadStored());
+        window.addEventListener("storage", (event)=>{
+          if(event.key !== GLOW_HUE_KEY) return;
+          applyGlowHue(event.newValue || DEFAULT_GLOW_HUE);
+        });
+      })();
+    </script>
+  </head>
+  <body class="micro-timer-page dark-theme">
+    <main class="micro-timer-wrap">
+      <div class="micro-timer-header">
+        <div>
+          <div class="micro-timer-title">Micro focus timer</div>
+          <div class="micro-timer-sub">Quick countdown for drills, stretches, or short reviews.</div>
+        </div>
+        <div class="micro-timer-actions">
+          <button class="btn" type="button" id="micro-timer-close">Close tab</button>
+        </div>
+      </div>
+
+      <div class="countdown-shell" id="countdown-shell">
+        <div class="countdown-head">
+          <div>
+            <p class="countdown-label">Quick countdown</p>
+            <h4 class="countdown-title">Micro focus timer</h4>
+          </div>
+          <div class="countdown-chip" id="countdown-status">Ready</div>
+        </div>
+        <div class="countdown-display-row">
+          <div class="countdown-time" id="countdown-display">05:00</div>
+          <div class="countdown-note">Use this for fast drills, stretches, or short reviews between full cycles.</div>
+        </div>
+        <div class="countdown-inputs">
+          <label>Minutes
+            <input type="number" id="countdown-min" min="0" max="240" value="5">
+          </label>
+          <label>Seconds
+            <input type="number" id="countdown-sec" min="0" max="59" value="0">
+          </label>
+          <div class="countdown-presets">
+            <button type="button" class="countdown-chip-btn" data-preset="180">3m</button>
+            <button type="button" class="countdown-chip-btn" data-preset="300">5m</button>
+            <button type="button" class="countdown-chip-btn" data-preset="600">10m</button>
+            <button type="button" class="countdown-chip-btn" data-preset="1200">20m</button>
+            <button type="button" class="countdown-chip-btn" data-preset="1800">30m</button>
+            <button type="button" class="countdown-chip-btn" data-preset="2700">45m</button>
+          </div>
+        </div>
+        <div class="countdown-progress" aria-hidden="true">
+          <span id="countdown-progress"></span>
+        </div>
+        <div class="countdown-actions">
+          <button class="pomo-btn primary" type="button" id="countdown-start">Start</button>
+          <button class="pomo-btn ghost" type="button" id="countdown-add">+1 min</button>
+          <button class="pomo-btn ghost" type="button" id="countdown-sub">-5 min</button>
+          <button class="pomo-btn danger" type="button" id="countdown-reset">Reset</button>
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;">
+            <input type="checkbox" id="countdown-auto" checked> Auto-restart
+          </label>
+          <button class="pomo-btn ghost" type="button" id="countdown-buffer-toggle" aria-pressed="true" title="Add a 10s breather before auto-restart">10s buffer</button>
+        </div>
+      </div>
+    </main>
+
+    <script src="index7.js"></script>
+    <script>
+      const closeBtn = document.getElementById("micro-timer-close");
+      closeBtn?.addEventListener("click", ()=> window.close());
+    </script>
+  </body>
+</html>

@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+    <link rel="stylesheet" href="Index.css">
+    <style>
+      body.login-page{
+        margin:0;
+        min-height:100vh;
+        background:
+          radial-gradient(circle at 12% 12%, rgba(var(--accent-rgb),.22), transparent 40%),
+          radial-gradient(circle at 78% 10%, rgba(var(--accent-2-rgb),.18), transparent 42%),
+          linear-gradient(180deg, #060a12 0%, #071829 45%, #05070b 100%);
+        color:var(--ink);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:32px 16px;
+        color-scheme:dark;
+      }
+      .login-shell{
+        width:min(1040px, 100%);
+        display:grid;
+        grid-template-columns: minmax(260px, 1.1fr) minmax(280px, 1fr);
+        gap:24px;
+        background:rgba(6,10,18,.75);
+        border:1px solid var(--neon-border);
+        border-radius:26px;
+        padding:26px;
+        box-shadow:0 30px 80px rgba(2,6,23,.6), 0 0 30px rgba(var(--accent-rgb),.18);
+        backdrop-filter:blur(12px);
+      }
+      .login-brand{
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+        padding:12px 8px 12px 12px;
+      }
+      .login-brand h1{
+        margin:0;
+        font-size:32px;
+        font-weight:800;
+      }
+      .login-brand p{
+        margin:0;
+        color:var(--muted);
+        line-height:1.6;
+      }
+      .login-card{
+        background:rgba(10,15,25,.9);
+        border:1px solid rgba(var(--accent-rgb),.25);
+        border-radius:20px;
+        padding:22px;
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+        box-shadow:0 18px 40px rgba(0,0,0,.45), inset 0 0 20px rgba(var(--accent-rgb),.08);
+      }
+      .login-title{
+        margin:0;
+        font-size:22px;
+        font-weight:800;
+      }
+      .login-sub{
+        margin:0;
+        color:#9fb2c7;
+        font-size:13px;
+      }
+      .login-field{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+      }
+      .login-field label{
+        font-size:12px;
+        text-transform:uppercase;
+        letter-spacing:.12em;
+        color:#9fb2c7;
+      }
+      .login-field input{
+        background:#0b1220;
+        border:1px solid rgba(var(--accent-rgb),.35);
+        border-radius:12px;
+        color:var(--ink);
+        padding:10px 12px;
+        font-size:14px;
+        outline:none;
+        box-shadow:0 0 0 rgba(var(--accent-rgb),0);
+        transition:border .2s ease, box-shadow .2s ease;
+      }
+      .login-field input:focus{
+        border-color:rgba(var(--accent-rgb),.7);
+        box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2);
+      }
+      .login-actions{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+        font-size:12px;
+        color:#9fb2c7;
+      }
+      .login-actions a{
+        color:var(--accent-2);
+        text-decoration:none;
+      }
+      .login-actions a:hover{color:var(--accent);}
+      .login-primary{
+        width:100%;
+        padding:10px 14px;
+        border-radius:12px;
+        border:1px solid rgba(var(--accent-rgb),.5);
+        background:linear-gradient(135deg, rgba(var(--accent-rgb),.2), rgba(var(--accent-rgb),.55));
+        color:#e2f5ff;
+        font-weight:700;
+        cursor:pointer;
+        box-shadow:0 12px 24px rgba(var(--accent-rgb),.25);
+      }
+      .oauth-row{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+      }
+      .oauth-btn{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        padding:10px 12px;
+        border-radius:12px;
+        border:1px solid rgba(148,163,184,.4);
+        background:#0f172a;
+        color:#e2e8f0;
+        font-weight:600;
+        letter-spacing:.02em;
+      }
+      .oauth-btn[disabled]{
+        opacity:.6;
+        cursor:not-allowed;
+      }
+      .oauth-pill{
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        font-size:11px;
+        text-transform:uppercase;
+        letter-spacing:.14em;
+        color:#9fb2c7;
+      }
+      .login-footer{
+        font-size:12px;
+        color:#8ca3bb;
+        text-align:center;
+      }
+      .login-ghost{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:12px;
+        border-radius:14px;
+        border:1px dashed rgba(var(--accent-rgb),.3);
+        background:rgba(15,23,42,.5);
+        color:#a8c1d8;
+        font-size:12px;
+      }
+      @media (max-width: 860px){
+        .login-shell{grid-template-columns:1fr;}
+      }
+    </style>
+  </head>
+  <body class="login-page dark-theme">
+    <main class="login-shell">
+      <section class="login-brand">
+        <div class="tag">Weekly Planner</div>
+        <h1>Welcome back</h1>
+        <p>Sync your streaks, assignments, and neon glow across devices. Your data stays local until you choose to connect.</p>
+        <div class="login-ghost">
+          <span>⚡</span>
+          <span>Cloud sync is optional. Continue offline any time.</span>
+        </div>
+      </section>
+
+      <section class="login-card">
+        <div>
+          <p class="oauth-pill">Secure sign in</p>
+          <h2 class="login-title">Log in to continue</h2>
+          <p class="login-sub">Placeholder buttons below — hook these to OAuth later.</p>
+        </div>
+
+        <div class="oauth-row">
+          <button class="oauth-btn" type="button" disabled>
+            <span></span>
+            <span>Continue with Apple</span>
+          </button>
+          <button class="oauth-btn" type="button" disabled>
+            <span>G</span>
+            <span>Continue with Google</span>
+          </button>
+        </div>
+
+        <div class="login-field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" placeholder="you@email.com">
+        </div>
+        <div class="login-field">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" placeholder="••••••••">
+        </div>
+
+        <div class="login-actions">
+          <label class="toggle">
+            <input type="checkbox" checked>
+            <span>Remember me</span>
+          </label>
+          <a href="#">Forgot password?</a>
+        </div>
+
+        <button class="login-primary" type="button">Log in</button>
+
+        <div class="login-footer">
+          New here? <a href="#">Create account</a> or <a href="index.html">Continue offline</a>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function(){
+        const GLOW_HUE_KEY = "planner_glow_hue";
+        const DEFAULT_GLOW_HUE = "#22d3ee";
+        const normalizeHex = (value)=>{
+          if(!value) return "";
+          let hex = String(value).trim();
+          if(!hex) return "";
+          if(hex[0] !== "#") hex = `#${hex}`;
+          if(/^#[0-9a-f]{3}$/i.test(hex)){
+            hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+          }
+          if(!/^#[0-9a-f]{6}$/i.test(hex)) return "";
+          return hex.toLowerCase();
+        };
+        const hexToRgb = (hex)=>{
+          const clean = normalizeHex(hex);
+          if(!clean) return null;
+          const num = parseInt(clean.slice(1), 16);
+          return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+        };
+        const rgbToHex = (rgb)=>{
+          const toHex = (val)=> Math.max(0, Math.min(255, val)).toString(16).padStart(2, "0");
+          return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+        };
+        const mixColors = (baseHex, mixHex, weight = 0.2)=>{
+          const base = hexToRgb(baseHex);
+          const mix = hexToRgb(mixHex);
+          if(!base || !mix) return normalizeHex(baseHex) || DEFAULT_GLOW_HUE;
+          const w = Math.max(0, Math.min(1, weight));
+          return rgbToHex({
+            r: Math.round(base.r * (1 - w) + mix.r * w),
+            g: Math.round(base.g * (1 - w) + mix.g * w),
+            b: Math.round(base.b * (1 - w) + mix.b * w)
+          });
+        };
+        const applyGlowHue = (hex)=>{
+          const base = normalizeHex(hex) || DEFAULT_GLOW_HUE;
+          const accent2 = mixColors(base, "#ffffff", 0.2);
+          const baseRgb = hexToRgb(base);
+          const accent2Rgb = hexToRgb(accent2);
+          const targets = [document.documentElement, document.body].filter(Boolean);
+          targets.forEach((el)=>{
+            el.style.setProperty("--accent", base);
+            el.style.setProperty("--accent-2", accent2);
+            if(baseRgb) el.style.setProperty("--accent-rgb", `${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}`);
+            if(accent2Rgb) el.style.setProperty("--accent-2-rgb", `${accent2Rgb.r}, ${accent2Rgb.g}, ${accent2Rgb.b}`);
+          });
+        };
+        let stored = "";
+        try{ stored = localStorage.getItem(GLOW_HUE_KEY) || ""; }catch(e){}
+        applyGlowHue(stored || DEFAULT_GLOW_HUE);
+        window.addEventListener("storage", (e)=>{
+          if(e.key === GLOW_HUE_KEY){
+            applyGlowHue(e.newValue || DEFAULT_GLOW_HUE);
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

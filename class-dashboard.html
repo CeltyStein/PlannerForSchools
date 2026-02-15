@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>All Classes Dashboard</title>
+    <link rel="stylesheet" href="Index.css">
+    <style>
+      body.class-dashboard-page{
+        margin:0;
+        min-height:100vh;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(var(--accent-rgb),.18), transparent 40%),
+          radial-gradient(circle at 78% 8%, rgba(var(--accent-2-rgb),.16), transparent 36%),
+          linear-gradient(180deg, #070b12 0%, #071423 42%, #05070b 100%);
+        color:var(--ink);
+        color-scheme:dark;
+      }
+      .class-all-wrap{max-width:1200px;margin:0 auto;padding:24px;}
+      .class-all-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+      .class-all-title{font-size:24px;font-weight:800;margin:0;}
+      .class-all-actions{display:flex;gap:8px;flex-wrap:wrap;}
+      .class-all-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px;}
+      .class-all-search input{
+        background:#0f172a;
+        border:1px solid var(--neon-border);
+        border-radius:10px;
+        padding:8px 10px;
+        color:var(--ink);
+        min-width:200px;
+      }
+      .class-all-grid{display:flex;flex-direction:column;gap:14px;}
+      .class-card{display:flex;flex-direction:column;gap:10px;}
+      .class-card-head h3{margin:0;}
+      .class-assignment{display:flex;flex-direction:column;gap:6px;}
+      .class-assignment-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+      .class-assignment-actions{display:flex;gap:6px;flex-wrap:wrap;}
+      .class-assignment-actions .btn{padding:6px 8px;font-size:12px;}
+      .class-assignment.completed{opacity:.55;text-decoration:line-through;}
+      .class-empty{padding:14px;border-radius:12px;border:1px dashed var(--neon-border);color:var(--muted);background:rgba(15,23,42,.5);}
+      @media(max-width:640px){
+        .class-assignment-row{flex-direction:column;align-items:flex-start;}
+      }
+    </style>
+  </head>
+  <body class="class-dashboard-page dark-theme">
+    <main class="class-all-wrap">
+      <header class="class-all-header">
+        <div>
+          <h1 class="class-all-title">All Classes & Assignments</h1>
+          <p class="note">Delete here = mark complete in Danger view.</p>
+        </div>
+        <div class="class-all-actions">
+          <a class="btn" href="index.html">Back to Planner</a>
+          <button class="btn" type="button" id="class-refresh">Refresh</button>
+        </div>
+      </header>
+      <div class="class-all-controls">
+        <div class="class-filter" id="class-term-filter"></div>
+        <label class="class-all-search">
+          <span class="sr-only">Search</span>
+          <input type="search" id="class-search" placeholder="Search assignments...">
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="class-show-completed">
+          <span>Show completed</span>
+        </label>
+      </div>
+      <div id="class-all-grid" class="class-all-grid"></div>
+    </main>
+    <script>
+      (function(){
+        const GLOW_HUE_KEY = "planner_glow_hue";
+        const DEFAULT_GLOW_HUE = "#22d3ee";
+        const normalizeHex = (value)=>{
+          if(!value) return "";
+          let hex = String(value).trim();
+          if(!hex) return "";
+          if(hex[0] !== "#") hex = `#${hex}`;
+          if(/^#[0-9a-f]{3}$/i.test(hex)){
+            hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+          }
+          if(!/^#[0-9a-f]{6}$/i.test(hex)) return "";
+          return hex.toLowerCase();
+        };
+        const hexToRgb = (hex)=>{
+          const clean = normalizeHex(hex);
+          if(!clean) return null;
+          const num = parseInt(clean.slice(1), 16);
+          return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+        };
+        const rgbToHex = (rgb)=>{
+          const toHex = (val)=> Math.max(0, Math.min(255, val)).toString(16).padStart(2, "0");
+          return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+        };
+        const mixColors = (baseHex, mixHex, weight = 0.2)=>{
+          const base = hexToRgb(baseHex);
+          const mix = hexToRgb(mixHex);
+          if(!base || !mix) return normalizeHex(baseHex) || DEFAULT_GLOW_HUE;
+          const w = Math.max(0, Math.min(1, weight));
+          return rgbToHex({
+            r: Math.round(base.r * (1 - w) + mix.r * w),
+            g: Math.round(base.g * (1 - w) + mix.g * w),
+            b: Math.round(base.b * (1 - w) + mix.b * w)
+          });
+        };
+        const applyGlowHue = (hex)=>{
+          const base = normalizeHex(hex) || DEFAULT_GLOW_HUE;
+          const accent2 = mixColors(base, "#ffffff", 0.2);
+          const baseRgb = hexToRgb(base);
+          const accent2Rgb = hexToRgb(accent2);
+          const targets = [document.documentElement, document.body].filter(Boolean);
+          targets.forEach((el)=>{
+            el.style.setProperty("--accent", base);
+            el.style.setProperty("--accent-2", accent2);
+            if(baseRgb) el.style.setProperty("--accent-rgb", `${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}`);
+            if(accent2Rgb) el.style.setProperty("--accent-2-rgb", `${accent2Rgb.r}, ${accent2Rgb.g}, ${accent2Rgb.b}`);
+          });
+        };
+        let stored = "";
+        try{ stored = localStorage.getItem(GLOW_HUE_KEY) || ""; }catch(e){}
+        applyGlowHue(stored || DEFAULT_GLOW_HUE);
+        window.addEventListener("storage", (e)=>{
+          if(e.key === GLOW_HUE_KEY){
+            applyGlowHue(e.newValue || DEFAULT_GLOW_HUE);
+          }
+        });
+      })();
+    </script>
+    <script src="class-dashboard.js"></script>
+  </body>
+</html>

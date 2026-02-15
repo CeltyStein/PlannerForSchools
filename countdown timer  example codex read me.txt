@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Muscle Heat Map Body</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      width: 100%;
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .container {
+      width: 100%;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .title {
+      color: #1a202c;
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 40px 0;
+    }
+
+    .body-diagram-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .body-diagram {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+    }
+
+    .muscle-region {
+      transition: all 0.3s ease;
+      cursor: pointer;
+      stroke: #64748b;
+      stroke-width: 1;
+    }
+
+    .muscle-region:hover {
+      opacity: 0.8;
+      transform: scale(1.02);
+      stroke-width: 2;
+    }
+
+    /* Heat map intensity colors */
+    .muscle-region.intensity-0 { fill: #e2e8f0; }
+    .muscle-region.intensity-1 { fill: #a7f3d0; }
+    .muscle-region.intensity-2 { fill: #6ee7b7; }
+    .muscle-region.intensity-3 { fill: #34d399; }
+    .muscle-region.intensity-4 { fill: #10b981; }
+    .muscle-region.intensity-5 { fill: #059669; }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 0 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    .legend-color {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 2px solid #cbd5e0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .muscle-label {
+      font-size: 11px;
+      fill: #1e293b;
+      font-weight: 600;
+      pointer-events: none;
+      text-anchor: middle;
+    }
+
+    .tooltip {
+      position: fixed;
+      background: rgba(15, 23, 42, 0.95);
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #667eea;
+      color: #ffffff;
+    }
+
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 640px) {
+      .title {
+        font-size: 24px;
+      }
+
+      .legend {
+        gap: 10px;
+      }
+
+      .legend-item {
+        font-size: 12px;
+      }
+
+      .legend-color {
+        width: 24px;
+        height: 24px;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <h1 class="title" id="title">Muscle Training Intensity</h1>
+   <div class="body-diagram-wrapper">
+    <svg class="body-diagram" viewbox="0 0 300 520" xmlns="http://www.w3.org/2000/svg" preserveaspectratio="xMidYMid meet"><!-- Head --> <circle cx="150" cy="30" r="20" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2" /> <!-- Neck --> <rect x="140" y="48" width="20" height="15" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" /> <!-- Shoulders --> <ellipse class="muscle-region intensity-0" data-muscle="Shoulders" data-intensity="0" cx="110" cy="80" rx="28" ry="22" /> <ellipse class="muscle-region intensity-0" data-muscle="Shoulders" data-intensity="0" cx="190" cy="80" rx="28" ry="22" /> <text class="muscle-label" x="150" y="85">
+      SHOULDERS
+     </text> <!-- Chest --> <ellipse class="muscle-region intensity-0" data-muscle="Chest" data-intensity="0" cx="150" cy="105" rx="48" ry="32" /> <text class="muscle-label" x="150" y="110">
+      CHEST
+     </text> <!-- Arms (Biceps/Triceps) --> <ellipse class="muscle-region intensity-0" data-muscle="Arms" data-intensity="0" cx="80" cy="120" rx="20" ry="45" /> <ellipse class="muscle-region intensity-0" data-muscle="Arms" data-intensity="0" cx="220" cy="120" rx="20" ry="45" /> <text class="muscle-label" x="80" y="125">
+      ARMS
+     </text> <text class="muscle-label" x="220" y="125">
+      ARMS
+     </text> <!-- Abs/Core --> <rect class="muscle-region intensity-0" data-muscle="Abs" data-intensity="0" x="125" y="135" width="50" height="70" rx="10" /> <text class="muscle-label" x="150" y="172">
+      ABS
+     </text> <!-- Back (behind chest/abs) --> <ellipse class="muscle-region intensity-0" data-muscle="Back" data-intensity="0" cx="150" cy="135" rx="45" ry="55" opacity="0.5" /> <text class="muscle-label" x="150" y="140" opacity="0.7">
+      BACK
+     </text> <!-- Forearms --> <ellipse class="muscle-region intensity-0" data-muscle="Forearms" data-intensity="0" cx="75" cy="175" rx="14" ry="25" /> <ellipse class="muscle-region intensity-0" data-muscle="Forearms" data-intensity="0" cx="225" cy="175" rx="14" ry="25" /> <!-- Obliques --> <path class="muscle-region intensity-0" data-muscle="Obliques" data-intensity="0" d="M 120 145 Q 105 170 110 195 L 125 195 L 125 145 Z" /> <path class="muscle-region intensity-0" data-muscle="Obliques" data-intensity="0" d="M 180 145 Q 195 170 190 195 L 175 195 L 175 145 Z" /> <!-- Glutes --> <ellipse class="muscle-region intensity-0" data-muscle="Glutes" data-intensity="0" cx="150" cy="220" rx="42" ry="28" /> <text class="muscle-label" x="150" y="225">
+      GLUTES
+     </text> <!-- Quadriceps (Front thighs) --> <ellipse class="muscle-region intensity-0" data-muscle="Legs" data-intensity="0" cx="130" cy="300" rx="26" ry="75" /> <ellipse class="muscle-region intensity-0" data-muscle="Legs" data-intensity="0" cx="170" cy="300" rx="26" ry="75" /> <text class="muscle-label" x="130" y="285">
+      QUADS
+     </text> <text class="muscle-label" x="170" y="285">
+      QUADS
+     </text> <!-- Hamstrings (behind quads) --> <ellipse class="muscle-region intensity-0" data-muscle="Hamstrings" data-intensity="0" cx="130" cy="305" rx="24" ry="70" opacity="0.5" /> <ellipse class="muscle-region intensity-0" data-muscle="Hamstrings" data-intensity="0" cx="170" cy="305" rx="24" ry="70" opacity="0.5" /> <!-- Calves --> <ellipse class="muscle-region intensity-0" data-muscle="Calves" data-intensity="0" cx="130" cy="430" rx="20" ry="40" /> <ellipse class="muscle-region intensity-0" data-muscle="Calves" data-intensity="0" cx="170" cy="430" rx="20" ry="40" /> <text class="muscle-label" x="130" y="435">
+      CALVES
+     </text> <text class="muscle-label" x="170" y="435">
+      CALVES
+     </text> <!-- Lower legs/shins --> <rect x="118" y="378" width="24" height="35" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" rx="4" /> <rect x="158" y="378" width="24" height="35" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" rx="4" /> <!-- Feet --> <ellipse cx="130" cy="485" rx="16" ry="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" /> <ellipse cx="170" cy="485" rx="16" ry="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" />
+    </svg>
+    <div class="controls"><button class="btn" onclick="simulateWorkoutData()">Simulate Random Training</button> <button class="btn" onclick="resetHeatMap()">Reset Heat Map</button>
+    </div>
+   </div>
+  </div>
+  <div class="tooltip" id="tooltip"></div>
+  <script>
+    const defaultConfig = {
+      title_text: "Muscle Training Intensity"
+    };
+
+    // Muscle intensity data (you can populate this from your own data)
+    const muscleIntensityData = {};
+
+    const tooltip = document.getElementById('tooltip');
+    const muscleRegions = document.querySelectorAll('.muscle-region');
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          const titleElement = document.getElementById('title');
+          if (titleElement) {
+            titleElement.textContent = config.title_text || defaultConfig.title_text;
+          }
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["title_text", config.title_text || defaultConfig.title_text]
+        ])
+      });
+    }
+
+    // Tooltip functionality
+    muscleRegions.forEach(region => {
+      region.addEventListener('mouseenter', (e) => {
+        const muscleGroup = e.target.dataset.muscle;
+        const intensity = e.target.dataset.intensity;
+        const intensityLabels = ['Untrained', 'Light', 'Moderate', 'High', 'Very High', 'Intense'];
+        
+        tooltip.textContent = `${muscleGroup}: ${intensityLabels[intensity]}`;
+        tooltip.style.display = 'block';
+      });
+
+      region.addEventListener('mousemove', (e) => {
+        tooltip.style.left = e.pageX + 15 + 'px';
+        tooltip.style.top = e.pageY + 15 + 'px';
+      });
+
+      region.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+      });
+
+      // Click to cycle through intensity levels (for demo purposes)
+      region.addEventListener('click', (e) => {
+        const currentIntensity = parseInt(e.target.dataset.intensity);
+        const newIntensity = (currentIntensity + 1) % 6;
+        updateMuscleIntensity(e.target, newIntensity);
+      });
+    });
+
+    function updateMuscleIntensity(element, intensity) {
+      element.dataset.intensity = intensity;
+      element.className = `muscle-region intensity-${intensity}`;
+    }
+
+    // Function to set muscle intensity from your own data
+    function setMuscleIntensity(muscleGroup, intensityLevel) {
+      // intensityLevel should be 0-5 (0=untrained, 5=intense)
+      const regions = document.querySelectorAll(`[data-muscle="${muscleGroup}"]`);
+      regions.forEach(region => {
+        updateMuscleIntensity(region, intensityLevel);
+      });
+    }
+
+    // Example function to simulate workout data
+    function simulateWorkoutData() {
+      const muscles = ['Chest', 'Shoulders', 'Arms', 'Back', 'Abs', 'Legs', 'Glutes', 'Calves', 'Forearms', 'Obliques', 'Hamstrings'];
+      
+      muscles.forEach(muscle => {
+        const randomIntensity = Math.floor(Math.random() * 6);
+        setMuscleIntensity(muscle, randomIntensity);
+      });
+    }
+
+    function resetHeatMap() {
+      muscleRegions.forEach(region => {
+        updateMuscleIntensity(region, 0);
+      });
+    }
+
+    // Example: You can call this function from your own code with your workout data
+    // setMuscleIntensity('Chest', 4); // Set chest to "Very High" intensity
+    // setMuscleIntensity('Legs', 3);  // Set legs to "High" intensity
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a787a1337694de4',t:'MTc2NDY1Mzg5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
